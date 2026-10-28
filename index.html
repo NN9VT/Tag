@@ -38,7 +38,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="app"><button class="b" id="flip">⟲</button><div id="toast"></div><div id="hud"></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnFull">⛶ Toàn màn hình</button></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
 </div>
@@ -222,7 +222,7 @@ function resolveTear(a,now){
 const FEED=[],dot=t=>'<span class="dot" style="background:'+hex(TEAMS[t][1])+'"></span>';
 const alive=t=>agents.filter(a=>a.team===t&&!a.out).length;
 function hudUpdate(){
-  $("hud").innerHTML=dot(0)+TEAMS[0][0]+" ♥<b>"+TS[0]+"</b> · "+alive(0)+" người : ♥<b>"+TS[1]+"</b> · "+alive(1)+" người "+TEAMS[1][0]+dot(1)+"<br>Bạn: "+me.name+" (team "+TEAMS[0][0]+")";
+  $("hud").innerHTML=dot(0)+" ♥<b>"+TS[0]+"</b> · "+alive(0)+" người<br>"+dot(1)+" ♥<b>"+TS[1]+"</b> · "+alive(1)+" người";
 }
 function renderFeed(){
   const n=performance.now();while(FEED.length&&FEED[0].until<n)FEED.shift();
@@ -479,7 +479,16 @@ function endMatch(lt){
   $("rank").innerHTML="<tr><th>#</th><th>Người chơi</th><th>Hạ</th><th>Bị hạ</th></tr>"+rows.map((a,i)=>"<tr"+(a===me?' class="me"':"")+"><td>"+(i+1)+"</td><td>"+dot(a.team)+a.nick+(a===me?" (bạn)":"")+"</td><td>"+a.kills+"</td><td>"+a.deaths+"</td></tr>").join("");
   $("over").style.display="flex";
 }
-$("btnBot").onclick=startMatch;$("again").onclick=startMatch;$("toMenu").onclick=toMenu;
+// toàn màn hình + khóa ngang (cần một lần chạm của người chơi; iPhone không hỗ trợ thì bỏ qua)
+function goFull(){
+  const lock=()=>{try{screen.orientation.lock("landscape").catch(()=>{})}catch(x){}setTimeout(resize,300)};
+  try{
+    const e=document.documentElement,f=e.requestFullscreen||e.webkitRequestFullscreen,pr=f&&f.call(e);
+    if(pr&&pr.then)pr.then(lock).catch(()=>{});else lock();
+  }catch(x){}
+}
+document.addEventListener("fullscreenchange",()=>setTimeout(resize,200));
+$("btnBot").onclick=()=>{goFull();startMatch()};$("btnFull").onclick=goFull;$("again").onclick=startMatch;$("toMenu").onclick=toMenu;
 showControls(false);$("hud").style.display="none";
 $("app").addEventListener("pointerdown",()=>{if(mode==="play"&&me.out)spec++});
 
