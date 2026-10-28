@@ -189,10 +189,11 @@ function headInside(h){for(const b of boxes)if(h[2]<b.top&&dist2(b,h[0],h[1])<RH
 
 // ---- xé: tay đưa ra 0.25s rồi mới kiểm tra, chờ 0.5s giữa hai lần ----
 const V1=new THREE.Vector3(),V2=new THREE.Vector3(),V3=new THREE.Vector3();
+const DIVE_V=4.5,DIVE_T=500; // lao người: cộng thêm tốc độ DIVE_V (đơn vị/giây) trong DIVE_T ms
 function tryTear(a,now,mv){
   if(a.prone||a.torn||now<a.tearCd)return;
   mv=mv||0;a.tearT=now;a.tearCd=now+500;a.tearAir=a.y>groundY(a.x,a.z)+.08;a.tearAt=now+250;
-  a.tearMv=a.tearAir?(a.jmv||mv):0;a.dive=a.tearMv>0;
+  a.tearMv=a.tearAir?(a.jmv||mv):0;a.dive=a.tearMv>0;if(a.dive)a.dvEnd=now+DIVE_T;
 }
 function resolveTear(a,now){
   a.g.updateMatrixWorld(true);
@@ -235,7 +236,7 @@ function feed(a,b){
 setInterval(renderFeed,500);
 
 // ---- bot biết săn: nhìn/nghe, nhớ, chọn mục tiêu, tìm đường, vòng ra sau lưng, leo thùng, xé ----
-const BOT_BOOST=1.08; // bot đang đuổi sát sau lưng chạy nhanh hơn bấy nhiêu lần (1 = bằng người chơi)
+const BOT_BOOST=1; // bot đang đuổi sát sau lưng chạy nhanh hơn bấy nhiêu lần (1 = bằng người chơi)
 const CS=.5,GN=108,GO=27,blockedCell=new Uint8Array(GN*GN);
 for(let gz=0;gz<GN;gz++)for(let gx=0;gx<GN;gx++){
   const cx=(gx+.5)*CS-GO,cz=(gz+.5)*CS-GO;
@@ -372,7 +373,7 @@ function steer(a,gx,gz){
   return{d,df,turn:ad<.02?0:Math.max(-1,Math.min(1,df*4)),mv:d<.25?0:(ad<1.5?1:0)};
 }
 function botInput(a,dt,now){
-  const A=a.ai||(a.ai={next:now+Math.random()*400,sneakT:0,tdel:70+Math.random()*100,tg:null,gx:a.x,gz:a.z,pgx:0,pgz:0,direct:false,climb:null,sneak:false,path:[],pi:0,planAt:0,mem:new Map(),lx:a.x,lz:a.z,stuck:0,tw:0,sideT:0,sideDir:1,patrol:0,react:.3+Math.random()*.3});
+  const A=a.ai||(a.ai={next:now+Math.random()*400,sneakT:0,dvAt:0,dvCd:0,tdel:70+Math.random()*100,tg:null,gx:a.x,gz:a.z,pgx:0,pgz:0,direct:false,climb:null,sneak:false,path:[],pi:0,planAt:0,mem:new Map(),lx:a.x,lz:a.z,stuck:0,tw:0,sideT:0,sideDir:1,patrol:0,react:.3+Math.random()*.3});
   if(now>A.next){A.next=now+A.react*1000;think(a,A,now)}
   const inp={mv:0,turn:0,jump:false};
   const t=A.tg;let chase=null;
@@ -382,7 +383,8 @@ function botInput(a,dt,now){
     if(seenNow)A.mem.set(t,{x:t.x,z:t.z,until:now+4000});
     const dx=a.x-t.x,dz=a.z-t.z,d=Math.hypot(dx,dz)||1;
     // đã ở sau lưng và gần: không dò đường nữa, đón đầu thẳng vào lưng mục tiêu (kể cả khi nó đang chạy)
-    if(seenNow&&!A.climb&&a.y<.5&&Math.abs(a.y-t.y)<.7&&d<7&&(t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.25)){
+    const dvg=A.dvAt||now<(a.dvEnd||0);
+    if(seenNow&&!A.climb&&(dvg||(a.y<.5&&Math.abs(a.y-t.y)<.7))&&d<7&&(t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.25)){
       const lead=Math.min(.45,d/5),cx=t.x+t.iv[0]*lead+Math.sin(t.ry)*.4,cz=t.z+t.iv[1]*lead+Math.cos(t.ry)*.4;
       if(clearSeg(a.x,a.z,cx,cz)){chase=[cx,cz];A.sneak=false}
     }
@@ -396,7 +398,13 @@ function botInput(a,dt,now){
       if(!A.tw)A.tw=now+A.tdel;
       if(now>=A.tw&&now>=a.tearCd){tryTear(a,now,0);A.tw=0}
     }else A.tw=0;
+    // mục tiêu đang chạy, hơi quá tầm xé thường: nhảy lao người rồi xé giữa không trung
+    if(chase&&!A.dvAt&&a.y<.05&&!a.crouch&&!a.prone&&now>=A.dvCd&&now>=a.tearCd&&Math.hypot(t.iv[0],t.iv[1])>2&&d>1.5&&d<2.8&&!tearReach(a,t)){
+      const wa=Math.atan2(a.x-chase[0],a.z-chase[1]);
+      if(Math.abs(Math.atan2(Math.sin(wa-a.ry),Math.cos(wa-a.ry)))<.35){inp.jump=true;A.dvAt=now+500;A.dvCd=now+3500}
+    }
   }
+  if(A.dvAt&&now>=A.dvAt){A.dvAt=0;if(a.y>groundY(a.x,a.z)+.08&&now>=a.tearCd)tryTear(a,now,0)}
   let gx=A.gx,gz=A.gz;
   if(chase){gx=chase[0];gz=chase[1]}
   else if(!A.direct&&A.path.length){
@@ -441,7 +449,8 @@ function step(a,inp,dt,now){
   }
   a.ry=nr;
   const mv=lock?0:inp.mv,base=(a.crouch?2.52:5.02)*(a.boost||1),v=mv>0?base:base*.6;
-  a.spd=mv*v;a.iv=[-Math.sin(a.ry)*mv*v,-Math.cos(a.ry)*mv*v];if(mv)a.lastMv=mv;
+  const bst=(a.dvEnd&&now<a.dvEnd&&!lock&&a.y>groundY(a.x,a.z)+.01)?DIVE_V:0;
+  a.spd=mv*v;a.iv=[-Math.sin(a.ry)*(mv*v+bst),-Math.cos(a.ry)*(mv*v+bst)];if(mv)a.lastMv=mv;
   const pv=pushVel(a,a.iv[0],a.iv[1]),dx=pv[0]*dt,dz=pv[1]*dt;
   a.hit=false;
   let hp=headPos(a,a.ry);
