@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Đấu Trường 3D</title>
+<style>
+html,body{margin:0;height:100%;background:#0b0f14;overflow:hidden;color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none;touch-action:none}
+#app{position:fixed;top:0;left:0;overflow:hidden;transform-origin:0 0}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#hud{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));color:#fff;font-size:14px;line-height:1.5;text-shadow:0 1px 3px #000}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid #fff;vertical-align:-1px;margin:0 4px 0 2px}
+#toast{position:absolute;top:9%;left:0;right:0;pointer-events:none;color:#fff;font-size:16px;font-weight:600;text-align:center}
+#toast>div{display:table;margin:3px auto;background:rgba(0,0,0,.5);padding:3px 12px;border-radius:12px}
+#flip{position:absolute;top:8px;right:12px;width:44px;height:44px;display:none}
+.pad{position:absolute;bottom:calc(36px + env(safe-area-inset-bottom,0px));display:grid;gap:8px}
+#dpad{left:calc(40px + env(safe-area-inset-left,0px));width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.35);touch-action:none;display:block}
+#dpad *{pointer-events:none}
+#dpad span{position:absolute;color:rgba(255,255,255,.7);font-size:20px;transform:translate(-50%,-50%)}
+#knob{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:rgba(255,255,255,.35)}
+#acts{right:calc(42px + env(safe-area-inset-right,0px));grid-template-columns:84px 84px;grid-template-rows:84px 84px}
+.b{border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.45);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px;touch-action:none}
+.b.on{background:rgba(255,255,255,.5)}
+#acts .b[data-k="tear"]{font-size:34px}
+#menu,#over{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(8,12,18,.82);color:#fff;z-index:5;text-align:center}
+#over{display:none}
+#menu h1{margin:0 0 6px;font-size:30px}
+#menu button,#over button{min-width:240px;padding:14px 20px;border-radius:14px;border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.14);color:#fff;font-size:18px;font-family:inherit}
+#menu button:disabled{opacity:.4}
+#menu small{display:block;font-size:12px;opacity:.85}
+#over h2{margin:0;font-size:26px}
+#rank{border-collapse:collapse;font-size:12.5px;line-height:1.25;margin:2px 0}
+#rank th,#rank td{padding:1px 9px;text-align:left}
+#rank tr.me{background:rgba(255,255,255,.22)}
+.btns{display:flex;gap:10px}
+.btns button{min-width:140px}
+#flip{z-index:6}
+</style></head><body>
+<div id="app"><button class="b" id="flip">⟲</button><div id="toast"></div><div id="hud"></div>
+<div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
+<div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
+<div id="menu"><h1>⚔️ Đấu Trường 3D</h1><button id="btnBot">Chơi với máy</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button></div>
+<div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const S=["ba","ko","ri","mu","ta","ze","lo","ni","sa","vu","ka","ha","ti","ro","me","du"];
+const genName=()=>{let n="";for(let i=0;i<3;i++)n+=S[Math.floor(Math.random()*S.length)];return n[0].toUpperCase()+n.slice(1)};
+const PAIRS=[[["Xanh lá",0x2fbf4a],["Đỏ",0xe02b2b]],[["Trắng",0xf2f2f2],["Đen",0x222222]],[["Vàng",0xf2c200],["Xanh dương",0x2b6be0]]];
+const TEAMS=PAIRS[Math.floor(Math.random()*PAIRS.length)];
+const hex=n=>"#"+n.toString(16).padStart(6,"0");
+
+// ---- cảnh ----
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x87b8e8);scene.fog=new THREE.Fog(0x87b8e8,25,70);
+const cam=new THREE.PerspectiveCamera(60,1,.1,200);
+const ren=new THREE.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));
+$("app").prepend(ren.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x556655,.9));
+const sun=new THREE.DirectionalLight(0xffffff,.6);sun.position.set(10,20,8);scene.add(sun);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(52,52),new THREE.MeshLambertMaterial({color:0x6b8f5e}));
+ground.rotation.x=-Math.PI/2;scene.add(ground);
+
+// [x, z, rộng, sâu, cao]
+const L=[[0,-26.5,53,1,3],[0,26.5,53,1,3],[-26.5,0,1,53,3],[26.5,0,1,53,3],
+[-8,-5,6,1,3],[9,-10,1,7,3],[0,8,4,1,1.2],[-13,10,1,6,3],[16,8,3,3,1.2],[-5,-18,3,3,1.2],
+[4,-4,2,2,1],[18,-18,6,1,3],[-18,-6,2,2,1],[-4,16,1.5,1.5,1],[10,18,5,1,1.2],[-20,-18,1,5,3],
+[20,0,3,3,1.2],[-21,14,4,1,1.2],[1,-12,5,1,1.2],[-9,21,1.5,1.5,1],[14,-3,2,2,1],[-12,2,3,3,1.2],
+[-16,-12,2,2,1],[12,-22,2,2,1.2],[8,-23,1,4,3],[22,10,1,5,3],[-24,-2,2,2,1],[-6,3,2,2,1.2],[6,2,1,4,3],[-1,-7,1.5,1.5,1],
+[-17,19,2,2,1.2],[18,22,2,2,1],[-24,8,1,4,3],[12,-13,2,2,1.2],[-8,-14,4,1,1.2],[3,14,1,3,3],[-6,24,3,1,1.2],[24,-10,2,2,1],[-24,-12,3,1,1.2]];
+const boxes=L.map(([x,z,w,d,h])=>{h=h===1.2?1.05:h;
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:h>2?0x8d8f94:0xc9a66b}));
+  m.position.set(x,h/2,z);scene.add(m);return{x,z,hw:w/2,hd:d/2,top:h,m};
+});
+const walls=boxes.map(b=>b.m);
+const R=.35,CR=.3;
+const groundY=(x,z)=>{let y=0;for(const b of boxes)if(Math.abs(x-b.x)<=b.hw+.15&&Math.abs(z-b.z)<=b.hd+.15&&b.top>y)y=b.top;return y};
+const blocked=(x,z,y,ox,oz)=>{for(const b of boxes){
+  if(y>=b.top-.05)continue;
+  const d=(px,pz)=>{const cx=Math.max(b.x-b.hw,Math.min(px,b.x+b.hw)),cz=Math.max(b.z-b.hd,Math.min(pz,b.z+b.hd));return (px-cx)**2+(pz-cz)**2};
+  const n=d(x,z);
+  if(n<R*R&&n<d(ox,oz)-1e-6)return true}return false};
+const free=(x,z)=>!boxes.some(b=>Math.abs(x-b.x)<b.hw+R+.3&&Math.abs(z-b.z)<b.hd+R+.3);
+
+function setBoard(g,nm){
+  const u=g.userData,x=u.c.getContext("2d");
+  x.fillStyle="#fff";x.fillRect(0,0,128,64);x.strokeStyle="#222";x.lineWidth=5;x.strokeRect(0,0,128,64);
+  x.fillStyle="#222";x.font="bold 30px sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText(String(nm).slice(0,10),64,34);
+  u.tex.needsUpdate=true;
+}
+// ---- nhân vật khối một màu + bảng tên trắng ----
+function makeChar(col,nm){
+  col=new THREE.Color(col);
+  const g=new THREE.Group(),M=new THREE.MeshLambertMaterial({color:col});
+  const B=(w,h,d,x,y,z,p)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M);m.position.set(x,y,z);p.add(m);return m};
+  const pv=new THREE.Group(),up=new THREE.Group();up.position.y=.8;g.add(pv);pv.add(up);
+  B(.62,.7,.36,0,.35,0,up);
+  const hd=new THREE.Mesh(new THREE.SphereGeometry(.26,14,10),M);hd.position.y=.98;up.add(hd);
+  const limb=(w,len,x,y,p)=>{const q=new THREE.Group();q.position.set(x,y,0);p.add(q);B(w,len,w,0,-len/2,0,q);B(w+.02,.14,w+.1,0,-len+.05,-.04,q);return q};
+  const AL=limb(.17,.62,-.4,.62,up),AR=limb(.17,.62,.4,.62,up),LL=limb(.22,.8,-.17,.8,pv),LR=limb(.22,.8,.17,.8,pv);
+  const c=document.createElement("canvas");c.width=128;c.height=64;
+  const tex=new THREE.CanvasTexture(c);
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(.56,.28),new THREE.MeshBasicMaterial({map:tex}));
+  board.position.set(0,.42,.19);up.add(board);
+  g.userData={cr:0,w:0,ph:0,a:0,pr:0,dv:0,up,pv,board,c,tex,legs:[LL,LR],arms:[AL,AR]};
+  setBoard(g,nm);
+  g.scale.setScalar(.7);scene.add(g);return g;
+}
+// hoạt ảnh: spd = tốc độ đi, air = đang ở trên không, crouch = ngồi, prone = 1 sấp / -1 ngửa, ta = mức đưa tay
+function animate(g,spd,air,crouch,dt,t,prone,ta,dive){
+  const u=g.userData,k=Math.min(1,dt*12);
+  u.pr+=((prone||0)-u.pr)*Math.min(1,dt*10);ta=ta||0;u.dv=(u.dv||0)+((dive?1:0)-(u.dv||0))*Math.min(1,dt*14);
+  u.cr+=((crouch&&!prone?1:0)-u.cr)*k;u.w+=(Math.min(1,Math.abs(spd)/5)-u.w)*k;u.a+=((air?1:0)-u.a)*Math.min(1,dt*14);
+  u.ph+=spd*dt*1.4;
+  const s=Math.sin(u.ph)*.95*u.w,f=1-u.a,idle=Math.sin(t*2);
+  u.legs[0].rotation.x=s*f+.5*u.a;u.legs[1].rotation.x=-s*f-.3*u.a;
+  u.arms[0].rotation.x=(-s*.8*f+2.4*u.a+idle*.03)*(1-ta)+(1.55-.87*u.dv)*ta;u.arms[1].rotation.x=(s*.8*f+2.4*u.a-idle*.03)*(1-ta)+(1.55-.87*u.dv)*ta;
+  u.legs.forEach(l=>{l.position.y=.8-.64*u.cr;l.scale.y=1-.8*u.cr});
+  u.up.position.y=.8-.64*u.cr+Math.abs(Math.sin(u.ph))*.07*u.w+idle*.008;
+  u.up.rotation.x=-.95*u.cr-.1*u.w;
+  u.pv.rotation.x=-1.5*u.pr-.87*u.dv;u.pv.position.y=.16*Math.abs(u.pr);
+}
+
+// ---- 10 nhân vật dùng chung luật: team 0 (có bạn) và team 1 ----
+const SP=[[[-23.5,-23.5],[-21,-23.5],[-23.5,-21],[-18.5,-23.5],[-23.5,-18.5]],[[23.5,23.5],[20.5,24.3],[23.5,20.5],[23.5,17.5],[17.5,24.3]]];
+const TS=[15,15],agents=[];
+for(let i=0;i<10;i++)agents.push({team:i<5?0:1,idx:i%5,isMe:i===0,name:"",g:null,x:0,y:0,z:0,ry:0,vy:0,crouch:false,prone:false,supine:false,proneEnd:0,lastG:0,lastMv:1,iv:[0,0],spd:0,
+  tearT:-9999,tearCd:0,tearAt:0,tearAir:false,torn:0,hd:0,t:0,ct:1+Math.random()*3,thinkT:0,hit:false,kills:0,deaths:0,nick:""});
+const me=agents[0],crBtn=document.querySelector('[data-k="crouch"]');
+function randPos(a){
+  for(let i=0;i<80;i++){
+    const x=(Math.random()-.5)*48,z=(Math.random()-.5)*48;
+    if(!free(x,z))continue;
+    if(agents.some(c=>c!==a&&!c.torn&&Math.hypot(c.x-x,c.z-z)<(c.team!==a.team?9:1.5)))continue;
+    return[x,z];
+  }
+  return SP[a.team][a.idx];
+}
+function respawn(a,first){
+  a.name=genName();
+  if(!a.g)a.g=makeChar(TEAMS[a.team][1],a.name);
+  else{setBoard(a.g,a.name);Object.assign(a.g.userData,{cr:0,w:0,ph:0,a:0,pr:0,dv:0});a.g.userData.board.visible=true}
+  const p=first?SP[a.team][a.idx]:randPos(a);
+  a.x=p[0];a.z=p[1];a.y=0;a.vy=0;a.ry=Math.atan2(a.x,a.z);a.hd=a.ry;
+  a.crouch=false;a.prone=false;a.supine=false;a.proneEnd=0;a.torn=0;a.tearAt=0;a.iv=[0,0];a.spd=0;
+  if(a.isMe)crBtn.classList.remove("on");
+  a.g.position.set(a.x,0,a.z);a.g.rotation.y=a.ry;
+}
+agents.forEach(a=>respawn(a,true));
+
+// đẩy nhau: mỗi bên bị cộng thêm tốc độ đối phương đang áp vào mình; va chạm sâu thì chặn cứng
+function pushVel(a,vx,vz){
+  for(const c of agents){
+    if(c===a||c.torn||Math.abs(a.y-c.y)>1.2)continue;
+    const ex=a.x-c.x,ez=a.z-c.z,d=Math.hypot(ex,ez);
+    if(d>2*CR+.05||d<1e-4)continue;
+    const nx=ex/d,nz=ez/d,pc=Math.max(0,c.iv[0]*nx+c.iv[1]*nz);
+    vx+=nx*pc;vz+=nz*pc;
+  }
+  return[vx,vz];
+}
+function bump(x,z,y,ox,oz,a){
+  for(const c of agents){
+    if(c===a||c.torn||Math.abs(y-c.y)>1.2)continue;
+    const n=(x-c.x)**2+(z-c.z)**2;
+    if(n<(1.3*CR)**2&&n<(ox-c.x)**2+(oz-c.z)**2-1e-6)return true;
+  }
+  return false;
+}
+
+// ---- va chạm của đầu: đầu có thể lọt vào thùng khoảng 1/3 (RH nhỏ) nhưng không xuyên sâu hơn ----
+const RH=.06;
+const dist2=(b,px,pz)=>{const cx=Math.max(b.x-b.hw,Math.min(px,b.x+b.hw)),cz=Math.max(b.z-b.hd,Math.min(pz,b.z+b.hd));return (px-cx)**2+(pz-cz)**2};
+function headPos(a,ry){
+  const u=a.g.userData,L=.95*u.cr+.1*u.w,uy=.8-.64*u.cr;
+  const y=uy+.98*Math.cos(L),z=-.98*Math.sin(L),th=-1.5*u.pr;
+  const yy=y*Math.cos(th)-z*Math.sin(th),zz=y*Math.sin(th)+z*Math.cos(th),f=-zz*.7;
+  return[a.x-Math.sin(ry)*f,a.z-Math.cos(ry)*f,a.y+(yy+.16*Math.abs(u.pr))*.7];
+}
+function headBlocked(hn,ho){
+  for(const b of boxes){
+    if(hn[2]>=b.top)continue;
+    const n=dist2(b,hn[0],hn[1]);
+    if(n<RH*RH&&n<dist2(b,ho[0],ho[1])-1e-6)return true;
+  }
+  return false;
+}
+function headInside(h){for(const b of boxes)if(h[2]<b.top&&dist2(b,h[0],h[1])<RH*RH)return true;return false}
+
+// ---- xé: tay đưa ra 0.25s rồi mới kiểm tra, chờ 0.5s giữa hai lần ----
+const V1=new THREE.Vector3(),V2=new THREE.Vector3(),V3=new THREE.Vector3();
+function tryTear(a,now,mv){
+  if(a.prone||a.torn||now<a.tearCd)return;
+  mv=mv||0;a.tearT=now;a.tearCd=now+500;a.tearAir=a.y>groundY(a.x,a.z)+.08;a.tearAt=now+250;
+  a.tearMv=a.tearAir?(a.jmv||mv):0;a.dive=a.tearMv>0;
+}
+function resolveTear(a,now){
+  a.g.updateMatrixWorld(true);
+  a.g.userData.arms[0].getWorldPosition(V2);a.g.userData.arms[1].getWorldPosition(V3);
+  const hx=(V2.x+V3.x)/2-Math.sin(a.ry)*.5,hz=(V2.z+V3.z)/2-Math.cos(a.ry)*.5,hy=(V2.y+V3.y)/2;
+  let hit=null;
+  for(const t of agents){
+    if(t.team===a.team||t.torn||t.supine)continue;
+    t.g.updateMatrixWorld(true);t.g.userData.board.getWorldPosition(V1);
+    const h=Math.hypot(hx-V1.x,hz-V1.z),dy=V1.y-hy;
+    const dx=a.x-t.x,dz=a.z-t.z,dist=Math.hypot(dx,dz)||.001;
+    const behind=t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/dist>=.5;
+    if(behind&&h<=.75+(a.dive?.2:0)&&dy>=-.4&&dy<=.47){hit=t;break}
+  }
+  if(hit){a.kills++;hit.deaths++;TS[hit.team]=Math.max(0,TS[hit.team]-1);hit.torn=now+2000;hit.tearAt=0;hit.g.userData.board.visible=false;feed(a,hit);if(TS[hit.team]<=0)endMatch(hit.team);return}
+  if(a.tearAir&&a.tearMv&&a.y>groundY(a.x,a.z)+.08){a.prone=true;a.proneEnd=0;a.supine=false}
+}
+
+// ---- bảng điểm và thông báo ----
+const FEED=[],dot=t=>'<span class="dot" style="background:'+hex(TEAMS[t][1])+'"></span>';
+function hudUpdate(){
+  $("hud").innerHTML=dot(0)+TEAMS[0][0]+" ♥<b>"+TS[0]+"</b> : ♥<b>"+TS[1]+"</b> "+TEAMS[1][0]+dot(1)+"<br>Bạn: "+me.name+" (team "+TEAMS[0][0]+")";
+}
+function renderFeed(){
+  const n=performance.now();while(FEED.length&&FEED[0].until<n)FEED.shift();
+  $("toast").innerHTML=FEED.map(f=>"<div>"+f.h+"</div>").join("");
+}
+function feed(a,b){
+  FEED.push({until:performance.now()+4000,h:dot(a.team)+a.name+" đã hạ được "+dot(b.team)+b.name});
+  if(FEED.length>4)FEED.shift();renderFeed();hudUpdate();
+}
+setInterval(renderFeed,500);
+
+// ---- bot biết săn: nhìn/nghe, nhớ, chọn mục tiêu, tìm đường, vòng ra sau lưng, leo thùng, xé ----
+const CS=.5,GN=108,GO=27,blockedCell=new Uint8Array(GN*GN);
+for(let gz=0;gz<GN;gz++)for(let gx=0;gx<GN;gx++){
+  const cx=(gx+.5)*CS-GO,cz=(gz+.5)*CS-GO;
+  for(const b of boxes)if(Math.abs(cx-b.x)<b.hw+.55&&Math.abs(cz-b.z)<b.hd+.55){blockedCell[gz*GN+gx]=1;break}
+}
+const cellOf=(x,z)=>[Math.max(0,Math.min(GN-1,Math.floor((x+GO)/CS))),Math.max(0,Math.min(GN-1,Math.floor((z+GO)/CS)))];
+function nearFree(gx,gz){
+  if(!blockedCell[gz*GN+gx])return[gx,gz];
+  for(let r=1;r<12;r++)for(let dz=-r;dz<=r;dz++)for(let dx=-r;dx<=r;dx++){
+    if(Math.max(Math.abs(dx),Math.abs(dz))!==r)continue;
+    const x=gx+dx,z=gz+dz;if(x>=0&&z>=0&&x<GN&&z<GN&&!blockedCell[z*GN+x])return[x,z];
+  }
+  return[gx,gz];
+}
+function findPath(sx,sz,tx,tz){
+  const[s0,s1]=nearFree(...cellOf(sx,sz)),[t0,t1]=nearFree(...cellOf(tx,tz)),si=s1*GN+s0,ti=t1*GN+t0;
+  if(si===ti)return[[tx,tz]];
+  const g=new Float32Array(GN*GN).fill(1e9),from=new Int32Array(GN*GN).fill(-1),closed=new Uint8Array(GN*GN),H=[];
+  const push=(f,i)=>{H.push([f,i]);let k=H.length-1;while(k>0){const p=(k-1)>>1;if(H[p][0]<=H[k][0])break;[H[p],H[k]]=[H[k],H[p]];k=p}};
+  const pop=()=>{const top=H[0],last=H.pop();if(H.length){H[0]=last;let k=0;for(;;){const l=2*k+1,r=l+1;let m=k;if(l<H.length&&H[l][0]<H[m][0])m=l;if(r<H.length&&H[r][0]<H[m][0])m=r;if(m===k)break;[H[m],H[k]]=[H[k],H[m]];k=m}}return top};
+  const hz=i=>Math.hypot(i%GN-t0,((i/GN)|0)-t1);
+  g[si]=0;push(hz(si),si);let it=0;
+  while(H.length&&it++<14000){
+    const i=pop()[1];if(closed[i])continue;closed[i]=1;if(i===ti)break;
+    const x=i%GN,z=(i/GN)|0;
+    for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){
+      if(!dx&&!dz)continue;
+      const nx=x+dx,nz=z+dz;if(nx<0||nz<0||nx>=GN||nz>=GN)continue;
+      const ni=nz*GN+nx;if(blockedCell[ni]||closed[ni])continue;
+      if(dx&&dz&&(blockedCell[z*GN+nx]||blockedCell[nz*GN+x]))continue;
+      const ng=g[i]+(dx&&dz?1.414:1);
+      if(ng<g[ni]){g[ni]=ng;from[ni]=i;push(ng+hz(ni),ni)}
+    }
+  }
+  if(from[ti]<0)return[[tx,tz]];
+  const out=[];for(let i=ti;i!==si&&i>=0;i=from[i])out.push([(i%GN+.5)*CS-GO,(((i/GN)|0)+.5)*CS-GO]);
+  return out.reverse();
+}
+function segHits(x1,z1,x2,z2,b){
+  let t0=0,t1=1;const dx=x2-x1,dz=z2-z1;
+  for(const[p,q,lo,hi]of[[dx,x1,b.x-b.hw,b.x+b.hw],[dz,z1,b.z-b.hd,b.z+b.hd]]){
+    if(Math.abs(p)<1e-9){if(q<lo||q>hi)return false}
+    else{let u=(lo-q)/p,w=(hi-q)/p;if(u>w)[u,w]=[w,u];t0=Math.max(t0,u);t1=Math.min(t1,w);if(t0>t1)return false}
+  }
+  return true;
+}
+const headTop=t=>t.y+(t.prone?.3:t.crouch?.69:1.43);
+function canSee(a,t){
+  const dx=t.x-a.x,dz=t.z-a.z,d=Math.hypot(dx,dz);
+  if(d>14)return false;
+  if(d>.01&&(dx*-Math.sin(a.ry)+dz*-Math.cos(a.ry))/d<.5)return false;
+  const ht=headTop(t);
+  for(const b of boxes)if(b.top>ht&&a.y<b.top-.05&&t.y<b.top-.05&&segHits(a.x,a.z,t.x,t.z,b))return false;
+  return true;
+}
+function canHear(a,t){
+  if(Math.hypot(t.iv[0],t.iv[1])<.5||Math.abs(t.y-a.y)>2)return false;
+  return Math.hypot(t.x-a.x,t.z-a.z)<(t.crouch?1.5:5);
+}
+const boardY=t=>t.y+(t.prone?.2:t.crouch?.391:.854);
+const fitOk=(a,t,c)=>{const dy=boardY(t)-(a.y+(c?.364:.994));return dy>=-.4&&dy<=.47};
+function patrolGoal(a,A){
+  const e=a.team?-1:1,cl=v=>Math.max(-23,Math.min(23,v));
+  for(let i=0;i<30;i++){
+    const x=cl((Math.random()*2-1+e*.5)*20),z=cl((Math.random()*2-1+e*.5)*20);
+    if(free(x,z)){A.gx=x;A.gz=z;return}
+  }
+}
+function think(a,A,now){
+  const seen=new Set();
+  for(const t of agents)if(t.team!==a.team&&!t.torn&&(canSee(a,t)||canHear(a,t))){seen.add(t);A.mem.set(t,{x:t.x,z:t.z,until:now+4000})}
+  for(const[t,m]of A.mem)if(now>m.until||t.torn)A.mem.delete(t);
+  let best=null,bs=1e9;
+  for(const[t,m]of A.mem){
+    let sc=Math.hypot(a.x-m.x,a.z-m.z)+3*agents.filter(o=>o!==a&&o.team===a.team&&o.ai&&o.ai.tg===t).length;
+    if((a.x-t.x)*-Math.sin(t.ry)+(a.z-t.z)*-Math.cos(t.ry)<0)sc-=3;
+    if(sc<bs){bs=sc;best=t}
+  }
+  A.tg=best;A.climb=null;A.direct=a.y>.5;A.sneak=false;
+  if(!best){
+    if(now>A.patrol||Math.hypot(A.gx-a.x,A.gz-a.z)<1.5){patrolGoal(a,A);A.patrol=now+9000;A.path=[]}
+  }else{
+    const t=best,m=A.mem.get(t),sn=seen.has(t),px=sn?t.x:m.x,pz=sn?t.z:m.z;
+    const bx=Math.sin(t.ry),bz=Math.cos(t.ry),dxa=a.x-px,dza=a.z-pz,d=Math.hypot(dxa,dza)||1;
+    const front=(dxa*-bx+dza*-bz)/d>0;
+    if(t.y>.5&&a.y<.5){
+      const b=boxes.find(b=>b.top>.5&&b.top<=1.3&&Math.abs(t.x-b.x)<=b.hw+.2&&Math.abs(t.z-b.z)<=b.hd+.2);
+      if(b){
+        A.climb=b;const cx=Math.max(b.x-b.hw,Math.min(a.x,b.x+b.hw)),cz=Math.max(b.z-b.hd,Math.min(a.z,b.z+b.hd));
+        const vx=a.x-cx,vz=a.z-cz,mm=Math.hypot(vx,vz)||1;A.gx=cx+vx/mm*.8;A.gz=cz+vz/mm*.8;
+      }
+    }
+    if(!A.climb){
+      if(front&&d>2.5&&sn){const sd=(dxa*Math.cos(t.ry)-dza*Math.sin(t.ry))>=0?1:-1;A.gx=px+Math.cos(t.ry)*sd*3.2+bx;A.gz=pz-Math.sin(t.ry)*sd*3.2+bz}
+      else{A.gx=px+bx;A.gz=pz+bz}
+      A.sneak=sn&&d<8&&front;
+    }
+  }
+  if(!A.direct&&(A.path.length===0||now>A.planAt||Math.hypot(A.gx-A.pgx,A.gz-A.pgz)>1.5)){
+    A.path=findPath(a.x,a.z,A.gx,A.gz);A.pi=0;A.pgx=A.gx;A.pgz=A.gz;A.planAt=now+1000;
+  }
+}
+function steer(a,gx,gz){
+  const dx=gx-a.x,dz=gz-a.z,d=Math.hypot(dx,dz),want=Math.atan2(-dx,-dz),df=Math.atan2(Math.sin(want-a.ry),Math.cos(want-a.ry));
+  return{d,df,turn:Math.abs(df)<.06?0:Math.sign(df),mv:d<.25?0:(Math.abs(df)<1.1?1:0)};
+}
+function botInput(a,dt,now){
+  const A=a.ai||(a.ai={next:0,tg:null,gx:a.x,gz:a.z,pgx:0,pgz:0,direct:false,climb:null,sneak:false,path:[],pi:0,planAt:0,mem:new Map(),lx:a.x,lz:a.z,stuck:0,tw:0,sideT:0,sideDir:1,patrol:0,react:.3+Math.random()*.3});
+  if(now>A.next){A.next=now+A.react*1000;think(a,A,now)}
+  const inp={mv:0,turn:0,jump:false};
+  a.crouch=A.sneak;
+  const t=A.tg;
+  if(t&&!t.torn&&A.mem.has(t)){
+    const dx=a.x-t.x,dz=a.z-t.z,d=Math.hypot(dx,dz)||1;
+    const behind=t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.5,fs=fitOk(a,t,false),fc=fitOk(a,t,true);
+    if(d<1.6&&behind&&(fs||fc)){
+      a.crouch=!fs;
+      if(!A.tw)A.tw=now+150+Math.random()*250;
+      if(now>=A.tw&&now>=a.tearCd){tryTear(a,now,0);A.tw=0}
+    }else A.tw=0;
+  }
+  let gx=A.gx,gz=A.gz;
+  if(!A.direct&&A.path.length){
+    while(A.pi<A.path.length-1&&Math.hypot(A.path[A.pi][0]-a.x,A.path[A.pi][1]-a.z)<.6)A.pi++;
+    const k=Math.min(A.pi+2,A.path.length-1);gx=A.path[k][0];gz=A.path[k][1];
+  }
+  const sp=steer(a,gx,gz);inp.turn=sp.turn;inp.mv=sp.mv;let wantMove=sp.mv>0;
+  if(A.climb&&a.y<.5){
+    const b=A.climb,cx=Math.max(b.x-b.hw,Math.min(a.x,b.x+b.hw)),cz=Math.max(b.z-b.hd,Math.min(a.z,b.z+b.hd));
+    if(Math.hypot(a.x-cx,a.z-cz)<1.3){const st=steer(a,b.x,b.z),ok=Math.abs(st.df)<.3;inp.turn=st.turn;inp.mv=ok?1:0;a.crouch=false;if(ok)inp.jump=true;wantMove=true}
+  }
+  if(a.crouch&&a.y>.3&&groundY(a.x-Math.sin(a.ry)*.7,a.z-Math.cos(a.ry)*.7)<a.y-.2)a.crouch=false;
+  A.stuck+=dt;
+  if(A.stuck>1){
+    if(wantMove&&Math.hypot(a.x-A.lx,a.z-A.lz)<.3){A.path=[];A.planAt=0;A.sideT=now+700;A.sideDir=Math.random()<.5?1:-1}
+    A.lx=a.x;A.lz=a.z;A.stuck=0;
+  }
+  if(now<A.sideT){inp.turn=A.sideDir;inp.mv=1}
+  return inp;
+}
+
+// ---- một bước vật lý cho một nhân vật (bạn hay bot đều dùng chung) ----
+function step(a,inp,dt,now){
+  if(a.torn){
+    if(now>a.torn){respawn(a);if(a.isMe)hudUpdate();return}
+    animate(a.g,0,false,false,dt,now/1000,0,0);return;
+  }
+  const lock=a.prone;
+  let nr=a.ry+(lock?0:inp.turn*1.45*dt);
+  if(nr!==a.ry){
+    const hn=headPos(a,nr);
+    if(headBlocked(hn,headPos(a,a.ry))){
+      // đầu sắp vào sâu thùng: vẫn cho xoay nếu còn chỗ để đẩy người ra, hết chỗ mới chặn
+      const ex=a.x-hn[0],ez=a.z-hn[1],m=Math.hypot(ex,ez)||1,px=a.x+ex/m*.15,pz=a.z+ez/m*.15;
+      if(blocked(px,pz,a.y,a.x,a.z)||bump(px,pz,a.y,a.x,a.z,a))nr=a.ry;
+    }
+  }
+  a.ry=nr;
+  const mv=lock?0:inp.mv,base=a.crouch?2.52:5.02,v=mv>0?base:base*.6;
+  a.spd=mv*v;a.iv=[-Math.sin(a.ry)*mv*v,-Math.cos(a.ry)*mv*v];if(mv)a.lastMv=mv;
+  const pv=pushVel(a,a.iv[0],a.iv[1]),dx=pv[0]*dt,dz=pv[1]*dt;
+  a.hit=false;
+  let hp=headPos(a,a.ry);
+  if(!blocked(a.x+dx,a.z,a.y,a.x,a.z)&&!bump(a.x+dx,a.z,a.y,a.x,a.z,a)&&!headBlocked([hp[0]+dx,hp[1],hp[2]],hp))a.x+=dx;else if(dx)a.hit=true;
+  hp=headPos(a,a.ry);
+  if(!blocked(a.x,a.z+dz,a.y,a.x,a.z)&&!bump(a.x,a.z+dz,a.y,a.x,a.z,a)&&!headBlocked([hp[0],hp[1]+dz,hp[2]],hp))a.z+=dz;else if(dz)a.hit=true;
+  // đầu đang nằm sâu trong thùng (vừa ngồi/ngã sát thùng) thì lùi nhẹ người ra cho đầu thoát
+  hp=headPos(a,a.ry);
+  if(headInside(hp)){
+    const ex=a.x-hp[0],ez=a.z-hp[1],m=Math.hypot(ex,ez);
+    if(m>.05){const px=a.x+ex/m*3*dt,pz=a.z+ez/m*3*dt;if(!blocked(px,a.z,a.y,a.x,a.z))a.x=px;if(!blocked(a.x,pz,a.y,a.x,a.z))a.z=pz}
+  }
+  const gy=groundY(a.x,a.z),onG=a.y<=gy+.001;
+  // đang ngồi mà bước khỏi mép thùng xuống chỗ thấp thì té (tới = sấp, lùi = ngửa)
+  if(onG&&!a.prone)a.lastG=gy;else if(!onG&&a.crouch&&!a.prone&&a.y<a.lastG-.12){a.prone=true;a.proneEnd=0;a.supine=a.lastMv<0}
+  if(a.prone){if(onG&&!a.proneEnd)a.proneEnd=now+1000;if(a.proneEnd&&now>a.proneEnd){a.prone=false;a.proneEnd=0;a.supine=false;a.crouch=false;if(a.isMe)crBtn.classList.remove("on")}}
+  if(a.tearAt&&now>=a.tearAt){a.tearAt=0;resolveTear(a,now)}
+  if(inp.jump&&onG&&!a.crouch&&!lock){a.vy=8;a.jmv=mv}
+  a.vy-=20*dt;a.y+=a.vy*dt;
+  if(a.y<=gy){a.y=gy;a.vy=0;a.jmv=0}
+  a.g.position.set(a.x,a.y,a.z);a.g.rotation.y=a.ry;
+  const tp=now-a.tearT,te=tp<0?0:tp<250?tp/250:tp<450?1-(tp-250)/200:0,ta=te*te*(3-2*te);
+  animate(a.g,a.spd,a.y>gy+.08,a.crouch,dt,now/1000,a.prone?(a.supine?-1:1):0,ta,a.dive&&tp<450&&a.y>gy+.05);
+}
+
+// ---- nút ảo ----
+const K={};
+document.querySelectorAll(".b[data-k]").forEach(el=>{
+  const k=el.dataset.k;
+  const dn=e=>{e.preventDefault();el.setPointerCapture?.(e.pointerId);
+    if(k==="crouch"){if(!me.prone&&!me.torn){me.crouch=!me.crouch;el.classList.toggle("on",me.crouch)}}
+    else{if(k==="tear")tryTear(me,performance.now(),(K.up?1:0)-(K.down?1:0));K[k]=true;el.classList.add("on")}};
+  const up=e=>{if(k!=="crouch"){K[k]=false;el.classList.remove("on")}};
+  el.addEventListener("pointerdown",dn);
+  ["pointerup","pointercancel","lostpointercapture"].forEach(t=>el.addEventListener(t,up));
+});
+addEventListener("contextmenu",e=>e.preventDefault());
+const pad=$("dpad"),knob=$("knob");let padId=null,rot=0;
+function padMove(e){
+  const r=pad.getBoundingClientRect(),sx=e.clientX-(r.left+r.width/2),sy=e.clientY-(r.top+r.height/2);
+  let x=sx,y=sy;
+  if(rot===1){x=sy;y=-sx}else if(rot===-1){x=-sy;y=sx}
+  const m=Math.hypot(x,y);if(m>60){x*=60/m;y*=60/m}
+  knob.style.transform="translate("+x+"px,"+y+"px)";
+  K.left=x<-20;K.right=x>20;K.up=y<-20;K.down=y>20;
+}
+function padEnd(e){if(e.pointerId!==padId)return;padId=null;K.left=K.right=K.up=K.down=false;knob.style.transform=""}
+pad.addEventListener("pointerdown",e=>{e.preventDefault();if(padId!==null)return;padId=e.pointerId;pad.setPointerCapture?.(e.pointerId);padMove(e)});
+pad.addEventListener("pointermove",e=>{if(e.pointerId===padId)padMove(e)});
+["pointerup","pointercancel","lostpointercapture"].forEach(t=>pad.addEventListener(t,padEnd));
+
+// ---- màn hình ngang dù điện thoại khóa xoay ----
+let flipped=false;
+function resize(){
+  const W=innerWidth,H=innerHeight,app=$("app"),port=H>W,w=port?H:W,h=port?W:H;
+  app.style.width=w+"px";app.style.height=h+"px";
+  app.style.transform=!port?"none":flipped?"translateY("+H+"px) rotate(-90deg)":"translateX("+W+"px) rotate(90deg)";
+  $("flip").style.display=port?"flex":"none";rot=!port?0:flipped?-1:1;
+  ren.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();
+}
+addEventListener("resize",resize);
+$("flip").addEventListener("click",()=>{flipped=!flipped;resize()});
+resize();hudUpdate();
+// ---- menu, mạng của hai team (15 mạng mỗi bên), kết thúc ván ----
+let mode="menu",ang=0;
+const showControls=v=>{["dpad","acts"].forEach(i=>$(i).style.display=v?"":"none")};
+function startMatch(){
+  TS[0]=TS[1]=15;FEED.length=0;renderFeed();
+  K.up=K.down=K.left=K.right=K.jump=false;knob.style.transform="";
+  agents.forEach(a=>{a.kills=0;a.deaths=0;a.ai=null;a.tearCd=0;a.tearT=-9999;a.tearAt=0;respawn(a,true);a.nick=a.name});
+  hudUpdate();$("hud").style.display="";$("menu").style.display="none";$("over").style.display="none";showControls(true);mode="play";
+}
+function toMenu(){
+  mode="menu";agents.forEach(a=>respawn(a,true));
+  $("over").style.display="none";$("menu").style.display="flex";$("hud").style.display="none";showControls(false);
+}
+function endMatch(lt){
+  if(mode!=="play")return;mode="over";showControls(false);
+  const win=lt!==me.team,rows=agents.slice().sort((x,y)=>y.kills-x.kills||x.deaths-y.deaths);
+  $("overTitle").textContent=win?"Bạn thắng! 🎉":"Bạn thua 😢";
+  $("overSub").textContent="Team "+TEAMS[1-lt][0]+" thắng · Team "+TEAMS[lt][0]+" hết mạng";
+  $("rank").innerHTML="<tr><th>#</th><th>Người chơi</th><th>Hạ</th><th>Bị hạ</th></tr>"+rows.map((a,i)=>"<tr"+(a===me?' class="me"':"")+"><td>"+(i+1)+"</td><td>"+dot(a.team)+a.nick+(a===me?" (bạn)":"")+"</td><td>"+a.kills+"</td><td>"+a.deaths+"</td></tr>").join("");
+  $("over").style.display="flex";
+}
+$("btnBot").onclick=startMatch;$("again").onclick=startMatch;$("toMenu").onclick=toMenu;
+showControls(false);$("hud").style.display="none";
+
+// ---- vòng lặp ----
+const ray=new THREE.Raycaster();
+let prev=performance.now();
+function loop(now){
+  requestAnimationFrame(loop);
+  const dt=Math.min(.05,(now-prev)/1000);prev=now;
+  if(mode==="play")for(const a of agents)step(a,a.isMe?{mv:(K.up?1:0)-(K.down?1:0),turn:(K.left?1:0)-(K.right?1:0),jump:!!K.jump}:botInput(a,dt,now),dt,now);
+  if(mode==="menu"){ang+=dt*.15;cam.position.set(Math.sin(ang)*34,15,Math.cos(ang)*34);cam.lookAt(0,1,0);ren.render(scene,cam);return}
+  const head=new THREE.Vector3(me.x,me.y+(me.prone?.4:me.crouch?.55:1.3),me.z);
+  const back=new THREE.Vector3(Math.sin(me.ry),.5,Math.cos(me.ry)).normalize();
+  ray.set(head,back);ray.far=4.6;
+  const hit=ray.intersectObjects(walls)[0];
+  const d=hit?Math.max(.8,hit.distance-.3):4.6;
+  cam.position.copy(head).addScaledVector(back,d);cam.lookAt(head);
+  ren.render(scene,cam);
+}
+requestAnimationFrame(loop);
+</script></body></html>
