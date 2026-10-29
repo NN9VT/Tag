@@ -8,7 +8,7 @@ html,body{margin:0;height:100%;background:#0b0f14;overflow:hidden;color-scheme:d
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #hud{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));color:#fff;font-size:14px;line-height:1.5;text-shadow:0 1px 3px #000}
 .dot{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid #fff;vertical-align:-1px;margin:0 4px 0 2px}
-#toast{position:absolute;top:4.5%;left:0;right:0;pointer-events:none;color:#fff;font-size:12px;font-weight:600;text-align:center}
+#toast{position:absolute;top:4.5%;left:0;right:0;pointer-events:none;color:#fff;font-size:13px;font-weight:600;text-align:center}
 #toast.low{top:11%}
 #toast>div{display:table;margin:2px auto;background:rgba(0,0,0,.5);padding:2px 9px;border-radius:10px}
 #flip{position:absolute;top:8px;right:12px;width:44px;height:44px;display:none}
@@ -21,13 +21,19 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .b{border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.45);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px;touch-action:none}
 .b.on{background:rgba(255,255,255,.5)}
 #acts .b[data-k="tear"]{font-size:34px}
-#menu,#over{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(8,12,18,.82);color:#fff;z-index:5;text-align:center}
+#menu,#over{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:rgba(8,12,18,.82);color:#fff;z-index:5;text-align:center}
 #over{display:none}
 #menu h1{margin:0 0 6px;font-size:30px}
-#menu button,#over button{min-width:240px;padding:14px 20px;border-radius:14px;border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.14);color:#fff;font-size:18px;font-family:inherit}
+#menu button,#over button{min-width:240px;padding:12px 20px;border-radius:14px;border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.14);color:#fff;font-size:18px;font-family:inherit}
 #menu button:disabled{opacity:.4}
 #menu small{display:block;font-size:12px;opacity:.85}
-#ver{margin-top:4px;font-size:12px;opacity:.55;letter-spacing:.5px}
+#menu #btnFull{min-width:0;padding:6px 14px;font-size:13px;border-radius:10px;opacity:.85}
+#rules{display:none;position:absolute;inset:0;z-index:8;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
+#rules .card{position:relative;background:rgba(18,24,32,.97);border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:16px 24px 14px;max-width:min(520px,86%);color:#fff}
+#rules h2{margin:0 0 8px;font-size:20px;text-align:center}
+#rules ol{margin:0;padding-left:22px;font-size:15px;line-height:1.6;text-align:left}
+#rulesX{position:absolute;top:6px;right:8px;width:36px;height:36px;padding:0;border-radius:50%;border:none;background:rgba(255,255,255,.14);color:#fff;font-size:18px;font-family:inherit}
+#ver{margin-top:2px;font-size:12px;opacity:.55;letter-spacing:.5px}
 #over h2{margin:0;font-size:26px}
 #rank{border-collapse:collapse;font-size:12.5px;line-height:1.25;margin:2px 0}
 #rank th,#rank td{padding:1px 9px;text-align:left}
@@ -40,7 +46,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="app"><button class="b" id="flip">⟲</button><div id="toast"></div><div id="hud"></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnFull">⛶ Toàn màn hình</button><div id="ver">ver1.04</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Luật chơi</button><button id="btnFull">⛶ Toàn màn hình</button><div id="ver">ver1.05</div></div>
+<div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Luật chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li></ol></div></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
 </div>
@@ -556,6 +563,9 @@ function goFull(){
   }catch(x){}
 }
 document.addEventListener("fullscreenchange",()=>setTimeout(resize,200));
+$("btnRules").onclick=()=>{$("rules").style.display="flex"};
+const closeRules=()=>{$("rules").style.display="none"};
+$("rulesX").onclick=closeRules;$("rules").addEventListener("click",e=>{if(e.target===$("rules"))closeRules()});
 $("btnBot").onclick=()=>{goFull();startMatch()};$("btnFull").onclick=goFull;$("again").onclick=startMatch;$("toMenu").onclick=toMenu;
 showControls(false);$("hud").style.display="none";
 $("app").addEventListener("pointerdown",()=>{if(mode==="play"&&me.out)spec++});
