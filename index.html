@@ -8,8 +8,9 @@ html,body{margin:0;height:100%;background:#0b0f14;overflow:hidden;color-scheme:d
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #hud{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));color:#fff;font-size:14px;line-height:1.5;text-shadow:0 1px 3px #000}
 .dot{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid #fff;vertical-align:-1px;margin:0 4px 0 2px}
-#toast{position:absolute;top:9%;left:0;right:0;pointer-events:none;color:#fff;font-size:16px;font-weight:600;text-align:center}
-#toast>div{display:table;margin:3px auto;background:rgba(0,0,0,.5);padding:3px 12px;border-radius:12px}
+#toast{position:absolute;top:4.5%;left:0;right:0;pointer-events:none;color:#fff;font-size:12px;font-weight:600;text-align:center}
+#toast.low{top:11%}
+#toast>div{display:table;margin:2px auto;background:rgba(0,0,0,.5);padding:2px 9px;border-radius:10px}
 #flip{position:absolute;top:8px;right:12px;width:44px;height:44px;display:none}
 .pad{position:absolute;bottom:calc(36px + env(safe-area-inset-bottom,0px));display:grid;gap:8px}
 #dpad{left:calc(40px + env(safe-area-inset-left,0px));width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.35);touch-action:none;display:block}
@@ -39,7 +40,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="app"><button class="b" id="flip">⟲</button><div id="toast"></div><div id="hud"></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnFull">⛶ Toàn màn hình</button><div id="ver">ver1.03</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnFull">⛶ Toàn màn hình</button><div id="ver">ver1.04</div></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
 </div>
@@ -125,7 +126,7 @@ function animate(g,spd,air,crouch,dt,t,prone,ta,dive){
 }
 
 // ---- 10 nhân vật dùng chung luật: team 0 (có bạn) và team 1 ----
-const SP=[[[-23.5,-23.5],[-21,-23.5],[-23.5,-21],[-18.5,-23.5],[-23.5,-18.5]],[[23.5,23.5],[20.5,24.3],[23.5,20.5],[23.5,17.5],[17.5,24.3]]];
+const SP=[[[-20,-23.5],[-10,-23.5],[0,-23.5],[10,-23.5],[20,-23.5]],[[20,23.5],[10,23.5],[0,23.5],[-10,23.5],[-20,23.5]]]; // đội 0 dọc cạnh bắc, đội 1 dọc cạnh nam
 const TS=[10,10],agents=[];
 for(let i=0;i<10;i++)agents.push({team:i<5?0:1,idx:i%5,isMe:i===0,name:"",g:null,x:0,y:0,z:0,ry:0,vy:0,crouch:false,prone:false,supine:false,proneEnd:0,lastG:0,lastMv:1,iv:[0,0],spd:0,
   tearT:-9999,tearCd:0,tearAt:0,tearAir:false,torn:0,hd:0,t:0,ct:1+Math.random()*3,thinkT:0,hit:false,kills:0,deaths:0,nick:"",out:false});
@@ -234,6 +235,7 @@ function hudUpdate(){
 function renderFeed(){
   const n=performance.now();while(FEED.length&&FEED[0].until<n)FEED.shift();
   $("toast").innerHTML=FEED.map(f=>"<div>"+f.h+"</div>").join("");
+  $("toast").classList.toggle("low",$("spec").style.display==="block"); // bị loại: chừa chỗ cho dòng "Bạn đã bị loại"
 }
 function feed(a,b){
   FEED.push({until:performance.now()+4000,h:dot(a.team)+a.name+" đã hạ được "+dot(b.team)+b.name});
@@ -335,7 +337,7 @@ const fitOk=(a,t,c)=>{const dy=boardY(t)-(a.y+(c?.364:.994));return dy>=-.4&&dy<
 function patrolGoal(a,A){
   const e=a.team?-1:1,cl=v=>Math.max(-23,Math.min(23,v));
   for(let i=0;i<30;i++){
-    const x=cl((Math.random()*2-1+e*.5)*20),z=cl((Math.random()*2-1+e*.5)*20);
+    const x=cl((Math.random()*2-1)*20),z=cl((Math.random()*2-1+e*.5)*20);
     if(free(x,z)){A.gx=x;A.gz=z;return}
   }
 }
