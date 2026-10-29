@@ -39,7 +39,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="app"><button class="b" id="flip">⟲</button><div id="toast"></div><div id="hud"></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnFull">⛶ Toàn màn hình</button><div id="ver">ver1.01</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnFull">⛶ Toàn màn hình</button><div id="ver">ver1.02</div></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
 </div>
@@ -192,7 +192,8 @@ function headInside(h){for(const b of boxes)if(h[2]<b.top&&dist2(b,h[0],h[1])<RH
 
 // ---- xé: tay đưa ra 0.25s rồi mới kiểm tra, chờ 0.5s giữa hai lần ----
 const V1=new THREE.Vector3(),V2=new THREE.Vector3(),V3=new THREE.Vector3();
-const DIVE_V=4.5,DIVE_T=500; // lao người: cộng thêm tốc độ DIVE_V (đơn vị/giây) trong DIVE_T ms
+const DIVE_V=4.5,DIVE_T=500,AIR_K=.85; // AIR_K: trên không đi chậm còn 85% (nhảy liên tục chậm hơn chạy); cú lao người vẫn được cộng DIVE_V
+ // lao người: cộng thêm tốc độ DIVE_V (đơn vị/giây) trong DIVE_T ms
 function tryTear(a,now,mv){
   if(a.prone||a.torn||now<a.tearCd)return;
   mv=mv||0;a.tearT=now;a.tearCd=now+500;a.tearAir=a.y>groundY(a.x,a.z)+.08;a.tearAt=now+250;
@@ -453,7 +454,7 @@ function step(a,inp,dt,now){
     }
   }
   a.ry=nr;
-  const mv=lock?0:inp.mv,base=(a.crouch?2.52:5.02)*(a.boost||1),v=mv>0?base:base*.6;
+  const mv=lock?0:inp.mv,base=(a.crouch?2.52:5.02)*(a.boost||1)*(a.y>groundY(a.x,a.z)+.01?AIR_K:1),v=mv>0?base:base*.6;
   const bst=(a.dvEnd&&now<a.dvEnd&&!lock&&a.y>groundY(a.x,a.z)+.01)?DIVE_V:0;
   a.spd=mv*v;a.iv=[-Math.sin(a.ry)*(mv*v+bst),-Math.cos(a.ry)*(mv*v+bst)];if(mv)a.lastMv=mv;
   const pv=pushVel(a,a.iv[0],a.iv[1]),dx=pv[0]*dt,dz=pv[1]*dt;
