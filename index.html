@@ -20,6 +20,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #acts{right:calc(42px + env(safe-area-inset-right,0px));grid-template-columns:84px 84px;grid-template-rows:84px 84px}
 .b{border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.45);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px;touch-action:none}
 .b.on{background:rgba(255,255,255,.5)}
+#trainUI{display:none;position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:calc(64px + env(safe-area-inset-right,0px));gap:6px;z-index:6}
+#trainUI button{padding:7px 11px;border-radius:10px;border:2px solid rgba(255,255,255,.45);background:rgba(0,0,0,.5);color:#fff;font-size:12px;font-family:inherit}
 .b.ult{background:rgba(255,140,0,.55);border-color:#ffb040;box-shadow:0 0 14px #ff9a1f;animation:ultPulse .7s infinite alternate}
 @keyframes ultPulse{to{box-shadow:0 0 28px #ffd070;background:rgba(255,170,40,.75)}}
 #acts .b[data-k="tear"]{font-size:34px}
@@ -46,9 +48,10 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #spec{display:none;position:absolute;top:calc(6px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;font-size:13px;padding:3px 12px;border-radius:12px;pointer-events:none;z-index:4;white-space:nowrap}
 </style></head><body>
 <div id="app"><button class="b" id="flip">⟲</button><div id="toast"></div><div id="hud"></div>
+<div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Luật chơi</button><button id="btnFull">⛶ Toàn màn hình</button><div id="ver">ver1.06</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Luật chơi</button><button id="btnFull">⛶ Toàn màn hình</button><div id="ver">ver1.07</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Luật chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Hạ 5 đối thủ để có tuyệt chiêu "18 cú đấm": bấm 👊 thủ thế 0,5s rồi lướt tới địch phía trước (tầm 5). Trượt thì phải chờ 3s. Bị hạ khi đã đủ 5 thì mất chiêu</li></ol></div></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
@@ -84,6 +87,15 @@ const boxes=L.map(([x,z,w,d,h])=>{h=h===1.2?1.05:h;
   m.position.set(x,h/2,z);scene.add(m);return{x,z,hw:w/2,hd:d/2,top:h,m};
 });
 const walls=boxes.map(b=>b.m);
+// chế độ tập luyện: đấu trường trống, chỉ giữ 4 tường biên (4 phần tử đầu của L)
+const ALLB=boxes.slice();
+function setArena(tr){
+  const set=tr?ALLB.slice(0,4):ALLB;
+  boxes.length=0;boxes.push(...set);walls.length=0;walls.push(...set.map(b=>b.m));
+  ALLB.forEach(b=>b.m.visible=set.includes(b));
+}
+let training=false,ultOn=true;
+const TP={0:[0,8],5:[-4,4],6:[0,4],7:[4,4]}; // vị trí bạn và 3 bot đứng yên (theo chỉ số agent)
 const R=.35,CR=.3;
 const groundY=(x,z)=>{let y=0;for(const b of boxes)if(Math.abs(x-b.x)<=b.hw+.15&&Math.abs(z-b.z)<=b.hd+.15&&b.top>y)y=b.top;return y};
 const blocked=(x,z,y,ox,oz)=>{for(const b of boxes){
@@ -159,8 +171,8 @@ function respawn(a,first){
   a.name=genName();
   if(!a.g)a.g=makeChar(TEAMS[a.team][1],a.name);
   else{setBoard(a.g,a.name);Object.assign(a.g.userData,{cr:0,w:0,ph:0,a:0,pr:0,dv:0,pu:0,pp:0});a.g.userData.up.rotation.y=0;a.g.userData.board.visible=true}
-  const p=first?SP[a.team][a.idx]:randPos(a);
-  a.x=p[0];a.z=p[1];a.y=0;a.vy=0;a.ry=Math.atan2(a.x,a.z);a.hd=a.ry;
+  const ti=training?agents.indexOf(a):-1,tp=training&&TP[ti]?TP[ti]:null,p=tp||(first?SP[a.team][a.idx]:randPos(a));
+  a.x=p[0];a.z=p[1];a.y=0;a.vy=0;a.ry=tp?(a.isMe?0:Math.PI):Math.atan2(a.x,a.z);a.hd=a.ry;
   a.crouch=false;a.prone=false;a.supine=false;a.proneEnd=0;a.torn=0;a.tearAt=0;a.proneDur=0;a.dvOn=false;a.dvEnd=0;a.iv=[0,0];a.spd=0;a.out=false;a.g.visible=true;
   a.ult=null;a.stunBy=null;a.kv=[0,0];a.fv=[0,0];a.flyEnd=0; // charge giữ nguyên qua các lần hồi sinh (chỉ mất khi bị hạ lúc đã đủ 5)
   if(a.isMe)crBtn.classList.remove("on");
@@ -323,7 +335,7 @@ function moveFlying(a,dt){ // người đã bị hạ nhưng đang bị văng đ
 const FEED=[],dot=t=>'<span class="dot" style="background:'+hex(TEAMS[t][1])+'"></span>';
 const alive=t=>agents.filter(a=>a.team===t&&!a.out).length;
 function hudUpdate(){
-  $("hud").innerHTML=dot(0)+" ♥<b>"+TS[0]+"</b> · "+alive(0)+" người<br>"+dot(1)+" ♥<b>"+TS[1]+"</b> · "+alive(1)+" người<br>👊 Tuyệt chiêu "+(me.charge>=5?"<b>SẴN SÀNG</b>":"<b>"+me.charge+"/5</b>");
+  $("hud").innerHTML=(training?"🎯 Tập luyện · Đã hạ <b>"+me.kills+"</b>":dot(0)+" ♥<b>"+TS[0]+"</b> · "+alive(0)+" người<br>"+dot(1)+" ♥<b>"+TS[1]+"</b> · "+alive(1)+" người")+"<br>👊 Tuyệt chiêu "+(me.charge>=5?"<b>SẴN SÀNG</b>":"<b>"+me.charge+"/5</b>");
   const tb=document.querySelector('[data-k="tear"]');tb.classList.toggle("ult",me.charge>=5);tb.textContent=me.charge>=5?"👊":"🏷️";
 }
 function renderFeed(){
@@ -638,12 +650,35 @@ resize();hudUpdate();
 let mode="menu",ang=0,spec=0;
 const showControls=v=>{["dpad","acts"].forEach(i=>$(i).style.display=v?"":"none")};
 function startMatch(){
+  training=false;setArena(false);$("trainUI").style.display="none";
   TS[0]=TS[1]=10;spec=0;$("spec").style.display="none";FEED.length=0;renderFeed();
   K.up=K.down=K.left=K.right=K.jump=false;knob.style.transform="";
   agents.forEach(a=>{a.kills=0;a.deaths=0;a.charge=0;a.ai=null;a.tearCd=0;a.tearT=-9999;a.tearAt=0;respawn(a,true);a.nick=a.name});
   hudUpdate();$("hud").style.display="";$("menu").style.display="none";$("over").style.display="none";showControls(true);mode="play";
 }
+// tập luyện: đấu trường trống, 3 bot đứng yên, hạ xong tự hồi sinh tại chỗ, không có thắng/thua; tuyệt chiêu bật sẵn (có nút tắt để thử xé thường)
+const TRAIN_IDX=[0,5,6,7];
+function trainUlt(on){
+  ultOn=on;me.charge=on?5:0;$("trUlt").textContent="👊 Tuyệt chiêu: "+(on?"BẬT":"TẮT");hudUpdate();
+}
+function startTraining(){
+  training=true;setArena(true);
+  TS[0]=TS[1]=999;spec=0;$("spec").style.display="none";FEED.length=0;renderFeed();
+  K.up=K.down=K.left=K.right=K.jump=false;knob.style.transform="";
+  agents.forEach((a,i)=>{
+    a.kills=0;a.deaths=0;a.charge=0;a.ai=null;a.tearCd=0;a.tearT=-9999;a.tearAt=0;respawn(a,true);a.nick=a.name;
+    if(!TRAIN_IDX.includes(i)){a.out=true;a.torn=Infinity;a.g.visible=false}
+  });
+  trainUlt(true);
+  $("hud").style.display="";$("menu").style.display="none";$("over").style.display="none";$("trainUI").style.display="flex";showControls(true);mode="play";
+}
+function resetTraining(){
+  FEED.length=0;renderFeed();
+  agents.forEach((a,i)=>{if(TRAIN_IDX.includes(i)){a.tearCd=0;a.tearT=-9999;a.tearAt=0;respawn(a,true)}});
+  hudUpdate();
+}
 function toMenu(){
+  training=false;setArena(false);$("trainUI").style.display="none";
   mode="menu";spec=0;$("spec").style.display="none";agents.forEach(a=>respawn(a,true));
   $("over").style.display="none";$("menu").style.display="flex";$("hud").style.display="none";showControls(false);
 }
@@ -667,7 +702,10 @@ document.addEventListener("fullscreenchange",()=>setTimeout(resize,200));
 $("btnRules").onclick=()=>{$("rules").style.display="flex"};
 const closeRules=()=>{$("rules").style.display="none"};
 $("rulesX").onclick=closeRules;$("rules").addEventListener("click",e=>{if(e.target===$("rules"))closeRules()});
-$("btnBot").onclick=()=>{goFull();startMatch()};$("btnFull").onclick=goFull;$("again").onclick=startMatch;$("toMenu").onclick=toMenu;
+$("btnBot").onclick=()=>{goFull();startMatch()};
+$("btnTrain").onclick=()=>{goFull();startTraining()};
+$("trUlt").onclick=()=>trainUlt(!ultOn);$("trReset").onclick=resetTraining;$("trExit").onclick=toMenu;
+["trUlt","trReset","trExit"].forEach(i=>$(i).addEventListener("pointerdown",e=>e.stopPropagation()));$("btnFull").onclick=goFull;$("again").onclick=startMatch;$("toMenu").onclick=toMenu;
 showControls(false);$("hud").style.display="none";
 $("app").addEventListener("pointerdown",()=>{if(mode==="play"&&me.out)spec++});
 
@@ -677,7 +715,8 @@ let prev=performance.now();
 function loop(now){
   requestAnimationFrame(loop);
   const dt=Math.min(.05,(now-prev)/1000);prev=now;
-  if(mode==="play")for(const a of agents)if(!a.out)step(a,a.isMe?{mv:(K.up?1:0)-(K.down?1:0),turn:(K.left?1:0)-(K.right?1:0),jump:!!K.jump}:botInput(a,dt,now),dt,now);
+  if(mode==="play"&&training&&ultOn&&me.charge<5){me.charge=5;hudUpdate()} // tập luyện: tuyệt chiêu luôn sẵn sàng
+  if(mode==="play")for(const a of agents)if(!a.out)step(a,a.isMe?{mv:(K.up?1:0)-(K.down?1:0),turn:(K.left?1:0)-(K.right?1:0),jump:!!K.jump}:training?{mv:0,turn:0,jump:false}:botInput(a,dt,now),dt,now);
   if(mode==="menu"){ang+=dt*.15;cam.position.set(Math.sin(ang)*34,15,Math.cos(ang)*34);cam.lookAt(0,1,0);ren.render(scene,cam);return}
   const vt=me.out?(()=>{const l=agents.filter(a=>a.team===me.team&&!a.out);return l.length?l[spec%l.length]:me})():me;
   const head=new THREE.Vector3(vt.x,vt.y+(vt.prone?.4:vt.crouch?.55:1.3),vt.z);
