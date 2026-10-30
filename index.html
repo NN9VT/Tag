@@ -262,7 +262,7 @@ function killAgent(a,hit,now,viaUlt){
 }
 
 // ---- tuyệt chiêu "18 cú đấm": thủ thế 0,5s (còn sơ hở) -> hất văng người xung quanh -> lướt tới địch gần nhất phía trước -> 18 cú đấm trong 2s (bất tử, đi chậm về trước, đẩy nạn nhân đi theo) -> cú cuối hất nạn nhân văng và hạ ----
-const ULT_WIND=500,ULT_RANGE=5,ULT_CONE=Math.cos(40*Math.PI/180),ULT_GAP=1,ULT_DASH_V=28,ULT_DASH_MAX=350,ULT_PUNCH_T=2000,ULT_N=18,ULT_WALK=1.5,ULT_PUSH_R=10,ULT_PUSH_V=18,ULT_THROW_V=27,KD=3; // KD: độ tắt dần vận tốc văng (quãng văng ≈ V/KD)
+const ULT_WIND=500,ULT_RANGE=5,ULT_CONE=Math.cos(30*Math.PI/180),ULT_GAP=1,ULT_DASH_V=28,ULT_DASH_MAX=350,ULT_PUNCH_T=2000,ULT_N=18,ULT_WALK=1.5,ULT_PUSH_R=10,ULT_PUSH_V=18,ULT_THROW_V=27,KD=3; // KD: độ tắt dần vận tốc văng (quãng văng ≈ V/KD)
 function ultTarget(a){
   const fx=-Math.sin(a.ry),fz=-Math.cos(a.ry);let best=null,bd=1e9;
   for(const t of agents){
@@ -711,6 +711,22 @@ $("app").addEventListener("pointerdown",()=>{if(mode==="play"&&me.out)spec++});
 
 // ---- vòng lặp ----
 const ray=new THREE.Raycaster();
+// máy quay điện ảnh khi lướt/đấm: sau lưng sát -> nhìn ngang -> từ trên xuống -> thấp phía bên kia -> chéo trước (đổi mỗi ~0,5s trong 2s đấm)
+const camP=new THREE.Vector3(),camL=new THREE.Vector3();let camBlend=0,shotInit=false;
+function ultShot(a,U){
+  const t=U.tg,fx=-Math.sin(a.ry),fz=-Math.cos(a.ry),rx=-fz,rz=fx,mx=(a.x+t.x)/2,mz=(a.z+t.z)/2,y=a.y;
+  const P=new THREE.Vector3(),L=new THREE.Vector3(mx,y+.9,mz),i=U.st==="dash"?-1:Math.min(3,Math.floor(U.n/4.5));
+  if(i<0){P.set(a.x-fx*2.4+rx*.5,y+1.6,a.z-fz*2.4+rz*.5);L.set(t.x,t.y+.9,t.z)}
+  else if(i===0)P.set(mx+rx*2.4,y+1,mz+rz*2.4);
+  else if(i===1)P.set(mx-fx*.3,y+6,mz-fz*.3);
+  else if(i===2)P.set(mx-rx*2,y+.45,mz-rz*2);
+  else P.set(mx+fx*2.6+rx*1.2,y+1.2,mz+fz*2.6+rz*1.2);
+  const dx=P.x-L.x,dy=P.y-L.y,dz=P.z-L.z,dist=Math.hypot(dx,dy,dz)||1,dir=new THREE.Vector3(dx/dist,dy/dist,dz/dist);
+  ray.set(L,dir);ray.far=dist; // không để tường che / xuyên tường
+  const h=ray.intersectObjects(walls)[0];if(h)P.copy(L).addScaledVector(dir,Math.max(.8,h.distance-.3));
+  P.x=Math.max(-25.4,Math.min(25.4,P.x));P.z=Math.max(-25.4,Math.min(25.4,P.z));P.y=Math.max(.3,P.y);
+  return{P,L};
+}
 let prev=performance.now();
 function loop(now){
   requestAnimationFrame(loop);
@@ -724,7 +740,15 @@ function loop(now){
   ray.set(head,back);ray.far=4.6;
   const hit=ray.intersectObjects(walls)[0];
   const d=hit?Math.max(.8,hit.distance-.3):4.6;
-  cam.position.copy(head).addScaledVector(back,d);cam.lookAt(head);
+  const dP=new THREE.Vector3().copy(head).addScaledVector(back,d),U=vt.ult,live=U&&U.tg&&(U.st==="dash"||U.st==="punch");
+  if(live){
+    const s=ultShot(vt,U);
+    if(!shotInit){camP.copy(dP);camL.copy(head);shotInit=true}
+    const k=Math.min(1,dt*12);camP.lerp(s.P,k);camL.lerp(s.L,k);
+  }else shotInit=false;
+  camBlend+=((live?1:0)-camBlend)*Math.min(1,dt*(live?10:6));
+  if(camBlend>.003){cam.position.copy(dP).lerp(camP,camBlend);cam.lookAt(new THREE.Vector3().copy(head).lerp(camL,camBlend))}
+  else{cam.position.copy(dP);cam.lookAt(head)}
   ren.render(scene,cam);
 }
 requestAnimationFrame(loop);
