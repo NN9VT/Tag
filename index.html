@@ -55,7 +55,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Luật chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.12</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Luật chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.13</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Luật chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Hạ 5 đối thủ để có tuyệt chiêu "18 cú đấm": bấm 👊 thủ thế 0,5s rồi lướt tới địch phía trước (tầm 5). Trượt thì phải chờ 3s. Bị hạ khi đã đủ 5 thì mất chiêu</li></ol></div></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
@@ -75,7 +75,7 @@ function auInit(){
   if(!AU.ctx){
     const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
     try{AU.ctx=new C()}catch(e){return}
-    AU.master=AU.ctx.createGain();const cp=AU.ctx.createDynamicsCompressor();cp.threshold.value=-8;cp.knee.value=8;cp.ratio.value=4;AU.master.connect(cp);cp.connect(AU.ctx.destination);
+    AU.master=AU.ctx.createGain();const cp=AU.ctx.createDynamicsCompressor();cp.threshold.value=-10;cp.knee.value=6;cp.ratio.value=10;AU.master.connect(cp);cp.connect(AU.ctx.destination);
     const n=AU.ctx.sampleRate,b=AU.ctx.createBuffer(1,n,n),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;AU.nb=b;
   }
   AU.master.gain.value=AU.on?AU.vol:0;
@@ -102,10 +102,10 @@ const SFX={
   tearHit:(t,d)=>{auNoise(t,d,"bandpass",2500,900,.2,.7,.003,1.2);auTone(t,d,"sine",200,60,.12,.6,.003)},
   tearMiss:(t,d)=>{auNoise(t,d,"bandpass",600,2500,.15,.3,.03,1.5)},
   dive:(t,d)=>{auNoise(t,d,"bandpass",400,3500,.25,.68,.04,1.5)},
-  jump:(t,d)=>{auTone(t,d,"sine",220,420,.09,.45,.005);auNoise(t,d,"lowpass",900,400,.06,.18,.004)},
-  land:(t,d)=>{auTone(t,d,"sine",130,50,.1,.75,.003);auNoise(t,d,"lowpass",700,200,.08,.38,.002)},
-  step:(t,d,k=1)=>{auNoise(t,d,"lowpass",500+Math.random()*200,160,.06,.45*k,.002,.8);auTone(t,d,"sine",95,55,.05,.38*k,.002)},
-  fall:(t,d)=>{auTone(t,d,"sine",100,30,.3,1.1,.004);auNoise(t,d,"lowpass",800,100,.25,.9,.004,.8)},
+  jump:(t,d)=>{auTone(t,d,"sine",220,420,.09,.9,.005);auNoise(t,d,"lowpass",900,400,.06,.36,.004)},
+  land:(t,d)=>{auTone(t,d,"sine",130,50,.1,1.5,.003);auNoise(t,d,"lowpass",700,200,.08,.76,.002)},
+  step:(t,d,k=1)=>{auNoise(t,d,"lowpass",500+Math.random()*200,160,.06,.9*k,.002,.8);auTone(t,d,"sine",95,55,.05,.76*k,.002)},
+  fall:(t,d)=>{auTone(t,d,"sine",100,30,.3,2.2,.004);auNoise(t,d,"lowpass",800,100,.25,1.8,.004,.8)},
   cloth:(t,d)=>{auNoise(t,d,"bandpass",2200,1200,.1,.18,.02,1.2)},
   hurt:(t,d)=>{auTone(t,d,"sawtooth",420,110,.5,.3,.01);auNoise(t,d,"bandpass",2000,400,.25,.35,.003,1)},
   out:(t,d)=>{auTone(t,d,"sawtooth",260,50,1,.35,.02);auNoise(t,d,"lowpass",800,100,.9,.4,.01,.8)},
