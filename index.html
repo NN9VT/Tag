@@ -55,7 +55,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Luật chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.13</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Luật chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.14</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Luật chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Hạ 5 đối thủ để có tuyệt chiêu "18 cú đấm": bấm 👊 thủ thế 0,5s rồi lướt tới địch phía trước (tầm 5). Trượt thì phải chờ 3s. Bị hạ khi đã đủ 5 thì mất chiêu</li></ol></div></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
@@ -238,7 +238,7 @@ function respawn(a,first){
   else{setBoard(a.g,a.name);Object.assign(a.g.userData,{cr:0,w:0,ph:0,a:0,pr:0,dv:0,pu:0,pp:0});a.g.userData.up.rotation.y=0;a.g.userData.board.visible=true}
   const ti=training?agents.indexOf(a):-1,tp=training&&TP[ti]?TP[ti]:null,p=tp||(first?SP[a.team][a.idx]:randPos(a));
   a.x=p[0];a.z=p[1];a.y=0;a.vy=0;a.ry=tp?(a.isMe?0:Math.PI):Math.atan2(a.x,a.z);a.hd=a.ry;
-  a.crouch=false;a.prone=false;a.supine=false;a.proneEnd=0;a.torn=0;a.tearAt=0;a.proneDur=0;a.dvOn=false;a.dvEnd=0;a.iv=[0,0];a.spd=0;a.out=false;a.g.visible=true;
+  a.crouch=false;a.prone=false;a.noisy=false;a.supine=false;a.proneEnd=0;a.torn=0;a.tearAt=0;a.proneDur=0;a.dvOn=false;a.dvEnd=0;a.iv=[0,0];a.spd=0;a.out=false;a.g.visible=true;
   a.ult=null;a.fin=null;a.pc=false;a.stp=undefined;a.stunBy=null;a.kv=[0,0];a.fv=[0,0];a.flyEnd=0; // charge giữ nguyên qua các lần hồi sinh (chỉ mất khi bị hạ lúc đã đủ 5)
   if(a.isMe)crBtn.classList.remove("on");
   a.g.position.set(a.x,0,a.z);a.g.rotation.y=a.ry;
@@ -482,11 +482,20 @@ function smoothPath(sx,sz,p){
 // đường thẳng không đụng vật cản (có chừa lề cho thân người)
 function clearSeg(x1,z1,x2,z2){for(const b of boxes)if(segHits(x1,z1,x2,z2,b,.4))return false;return true}
 // dự đoán 0.25s sau (lúc tay xé chạm): tay có với tới bảng tên và đang ở phía sau không
+// người nằm sấp: bảng tên nằm ở lưng, cách tâm khoảng .85 về phía ĐẦU (hướng mặt); người xé đang ngồi thì tay với ra trước khoảng .85 (vai chúi về trước)
+const PRONE_BD=.85;
+function proneGoal(a,t,px,pz){ // chỗ bot cần đứng: cách bảng tên .85 phía bot đang ở, để tay chạm đúng bảng tên
+  const bx=px-Math.sin(t.ry)*PRONE_BD,bz=pz-Math.cos(t.ry)*PRONE_BD;
+  let ux=a.x-bx,uz=a.z-bz;const m=Math.hypot(ux,uz);
+  if(m<.05){ux=-Math.sin(t.ry);uz=-Math.cos(t.ry)}else{ux/=m;uz/=m}
+  return[bx+ux*PRONE_BD,bz+uz*PRONE_BD];
+}
 function tearReach(a,t){
   const T=.25,ax=a.x+a.iv[0]*T,az=a.z+a.iv[1]*T,tx=t.x+t.iv[0]*T,tz=t.z+t.iv[1]*T;
-  const hx=ax-Math.sin(a.ry)*.5,hz=az-Math.cos(a.ry)*.5,bx=tx+Math.sin(t.ry)*.133,bz=tz+Math.cos(t.ry)*.133;
+  const lead=t.prone?PRONE_BD:.5,hx=ax-Math.sin(a.ry)*lead,hz=az-Math.cos(a.ry)*lead,
+    bx=t.prone?tx-Math.sin(t.ry)*PRONE_BD:tx+Math.sin(t.ry)*.133,bz=t.prone?tz-Math.cos(t.ry)*PRONE_BD:tz+Math.cos(t.ry)*.133;
   const dx=ax-tx,dz=az-tz,d=Math.hypot(dx,dz)||.001;
-  return(t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.55)&&Math.hypot(hx-bx,hz-bz)<=.9;
+  return(t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.55)&&Math.hypot(hx-bx,hz-bz)<=(t.prone?.65:.9);
 }
 function segHits(x1,z1,x2,z2,b,m=0){
   let t0=0,t1=1;const dx=x2-x1,dz=z2-z1;
@@ -506,6 +515,7 @@ function canSee(a,t){
   return true;
 }
 function canHear(a,t){
+  if(t.prone&&t.noisy)return Math.abs(t.y-a.y)<=2&&Math.hypot(t.x-a.x,t.z-a.z)<8; // tiếng té ngã: bot trong tầm 8 nghe thấy suốt lúc người đó còn nằm
   if(Math.hypot(t.iv[0],t.iv[1])<.5||Math.abs(t.y-a.y)>2)return false;
   return Math.hypot(t.x-a.x,t.z-a.z)<(t.crouch?1.5:5);
 }
@@ -543,9 +553,10 @@ function think(a,A,now){
       }
     }
     if(!A.climb){
-      if(front&&d>2.5&&sn){const sd=(dxa*Math.cos(t.ry)-dza*Math.sin(t.ry))>=0?1:-1;A.gx=px+Math.cos(t.ry)*sd*3.2+bx;A.gz=pz-Math.sin(t.ry)*sd*3.2+bz}
+      if(t.prone){const g=proneGoal(a,t,px,pz);A.gx=g[0];A.gz=g[1]}
+      else if(front&&d>2.5&&sn){const sd=(dxa*Math.cos(t.ry)-dza*Math.sin(t.ry))>=0?1:-1;A.gx=px+Math.cos(t.ry)*sd*3.2+bx;A.gz=pz-Math.sin(t.ry)*sd*3.2+bz}
       else{A.gx=px+bx;A.gz=pz+bz}
-      if(sn&&d<8&&front){A.sneak=true;A.sneakT=now+1200}else if(wasSneak&&now<A.sneakT)A.sneak=true;
+      if(!t.prone&&sn&&d<8&&front){A.sneak=true;A.sneakT=now+1200}else if(!t.prone&&wasSneak&&now<A.sneakT)A.sneak=true;
     }
   }
   if(!A.direct&&(A.path.length===0||now>A.planAt||Math.hypot(A.gx-A.pgx,A.gz-A.pgz)>3)){
@@ -566,7 +577,7 @@ function botInput(a,dt,now){
   if(a.charge>=5&&!a.prone&&now>=a.tearCd&&a.y<=groundY(a.x,a.z)+.01){
     const ut=ultTarget(a);if(ut&&Math.hypot(ut.x-a.x,ut.z-a.z)<4.5){startUlt(a,now);return inp}
   }
-  const t=A.tg;let chase=null;
+  const t=A.tg;let chase=null,cPr=false;
   if(t&&!t.torn&&A.mem.has(t)){
     // nhìn/nghe mục tiêu mỗi khung hình để vị trí luôn mới
     const seenNow=canSee(a,t)||canHear(a,t);
@@ -575,8 +586,8 @@ function botInput(a,dt,now){
     // đã ở sau lưng và gần: không dò đường nữa, đón đầu thẳng vào lưng mục tiêu (kể cả khi nó đang chạy)
     const dvg=A.dvAt||now<(a.dvEnd||0);
     if(seenNow&&!A.climb&&(dvg||(a.y<.5&&Math.abs(a.y-t.y)<.7))&&d<7&&(t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.25)){
-      const lead=Math.min(.45,d/5),cx=t.x+t.iv[0]*lead+Math.sin(t.ry)*.4,cz=t.z+t.iv[1]*lead+Math.cos(t.ry)*.4;
-      if(clearSeg(a.x,a.z,cx,cz)){chase=[cx,cz];A.sneak=false}
+      const lead=Math.min(.45,d/5),pg=t.prone?proneGoal(a,t,t.x,t.z):null,cx=pg?pg[0]:t.x+t.iv[0]*lead+Math.sin(t.ry)*.4,cz=pg?pg[1]:t.z+t.iv[1]*lead+Math.cos(t.ry)*.4;
+      if(clearSeg(a.x,a.z,cx,cz)){chase=[cx,cz];cPr=!!pg;A.sneak=false}
     }
   }
   a.crouch=A.sneak;a.boost=chase?BOT_BOOST:1;
@@ -606,7 +617,9 @@ function botInput(a,dt,now){
     gx=P[A.pi][0];gz=P[A.pi][1];
     if(A.pi===last&&losGrid(a.x,a.z,A.gx,A.gz)){gx=A.gx;gz=A.gz}
   }
-  const sp=steer(a,gx,gz);inp.turn=sp.turn;inp.mv=sp.mv;let wantMove=sp.mv>0;
+  const sp=steer(a,gx,gz);inp.turn=sp.turn;inp.mv=sp.mv;
+  if(cPr&&sp.d<3&&Math.abs(sp.df)>.6)inp.mv=0; // đuổi người nằm ở sát: quay mặt vào chỗ đứng trước rồi mới bước, tránh chạy vòng quanh (điểm nằm trong vòng quay của bot)
+  let wantMove=inp.mv>0;
   if(A.climb&&a.y<.5){
     const b=A.climb,cx=Math.max(b.x-b.hw,Math.min(a.x,b.x+b.hw)),cz=Math.max(b.z-b.hd,Math.min(a.z,b.z+b.hd));
     if(Math.hypot(a.x-cx,a.z-cz)<1.3){const st=steer(a,b.x,b.z),ok=Math.abs(st.df)<.3;inp.turn=st.turn;inp.mv=ok?1:0;a.crouch=false;if(ok)inp.jump=true;wantMove=true}
@@ -662,12 +675,12 @@ function step(a,inp,dt,now){
   }
   const gy=groundY(a.x,a.z),onG=a.y<=gy+.001;
   // đang ngồi mà bước khỏi mép thùng xuống chỗ thấp thì té (tới = sấp, lùi = ngửa)
-  if(onG&&!a.prone)a.lastG=gy;else if(!onG&&a.crouch&&!a.prone&&a.y<a.lastG-.12){a.prone=true;a.proneEnd=0;a.supine=a.lastMv<0;setTimeout(()=>play("fall",a.x,a.z),260)}
-  if(a.prone){if(onG&&!a.proneEnd)a.proneEnd=now+(a.proneDur||1000);if(a.proneEnd&&now>a.proneEnd){a.prone=false;a.proneEnd=0;a.proneDur=0;a.supine=false;a.crouch=false;if(a.isMe)crBtn.classList.remove("on")}}
+  if(onG&&!a.prone)a.lastG=gy;else if(!onG&&a.crouch&&!a.prone&&a.y<a.lastG-.12){a.prone=true;a.noisy=true;a.proneEnd=0;a.supine=a.lastMv<0;setTimeout(()=>play("fall",a.x,a.z),260)}
+  if(a.prone){if(onG&&!a.proneEnd)a.proneEnd=now+(a.proneDur||1000);if(a.proneEnd&&now>a.proneEnd){a.prone=false;a.noisy=false;a.proneEnd=0;a.proneDur=0;a.supine=false;a.crouch=false;if(a.isMe)crBtn.classList.remove("on")}}
   if(a.tearAt&&now>=a.tearAt){a.tearAt=0;if(!resolveTear(a,now))play("tearMiss",a.x,a.z)}
   if(a.dvOn&&now>=a.dvChk){
     if(resolveTear(a,now)){a.dvOn=false;a.tearCd=now+500}
-    else if(onG){a.dvOn=false;a.tearCd=now+500;a.prone=true;a.proneEnd=0;a.supine=false;a.proneDur=1500;play("fall",a.x,a.z)} // xé hụt khi lao: té nằm 1,5s
+    else if(onG){a.dvOn=false;a.tearCd=now+500;a.prone=true;a.noisy=true;a.proneEnd=0;a.supine=false;a.proneDur=1500;play("fall",a.x,a.z)} // xé hụt khi lao: té nằm 1,5s
   }
   if(inp.jump&&onG&&!a.crouch&&!lock){a.vy=8;a.jmv=mv;play("jump",a.x,a.z)}
   a.vy-=20*dt;a.y+=a.vy*dt;
