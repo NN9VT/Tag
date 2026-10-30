@@ -51,7 +51,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Luật chơi</button><button id="btnFull">⛶ Toàn màn hình</button><div id="ver">ver1.07</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Luật chơi</button><button id="btnFull">⛶ Toàn màn hình</button><div id="ver">ver1.08</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Luật chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Hạ 5 đối thủ để có tuyệt chiêu "18 cú đấm": bấm 👊 thủ thế 0,5s rồi lướt tới địch phía trước (tầm 5). Trượt thì phải chờ 3s. Bị hạ khi đã đủ 5 thì mất chiêu</li></ol></div></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
@@ -174,7 +174,7 @@ function respawn(a,first){
   const ti=training?agents.indexOf(a):-1,tp=training&&TP[ti]?TP[ti]:null,p=tp||(first?SP[a.team][a.idx]:randPos(a));
   a.x=p[0];a.z=p[1];a.y=0;a.vy=0;a.ry=tp?(a.isMe?0:Math.PI):Math.atan2(a.x,a.z);a.hd=a.ry;
   a.crouch=false;a.prone=false;a.supine=false;a.proneEnd=0;a.torn=0;a.tearAt=0;a.proneDur=0;a.dvOn=false;a.dvEnd=0;a.iv=[0,0];a.spd=0;a.out=false;a.g.visible=true;
-  a.ult=null;a.stunBy=null;a.kv=[0,0];a.fv=[0,0];a.flyEnd=0; // charge giữ nguyên qua các lần hồi sinh (chỉ mất khi bị hạ lúc đã đủ 5)
+  a.ult=null;a.fin=null;a.stunBy=null;a.kv=[0,0];a.fv=[0,0];a.flyEnd=0; // charge giữ nguyên qua các lần hồi sinh (chỉ mất khi bị hạ lúc đã đủ 5)
   if(a.isMe)crBtn.classList.remove("on");
   a.g.position.set(a.x,0,a.z);a.g.rotation.y=a.ry;
 }
@@ -262,7 +262,7 @@ function killAgent(a,hit,now,viaUlt){
 }
 
 // ---- tuyệt chiêu "18 cú đấm": thủ thế 0,5s (còn sơ hở) -> hất văng người xung quanh -> lướt tới địch gần nhất phía trước -> 18 cú đấm trong 2s (bất tử, đi chậm về trước, đẩy nạn nhân đi theo) -> cú cuối hất nạn nhân văng và hạ ----
-const ULT_WIND=500,ULT_RANGE=5,ULT_CONE=Math.cos(30*Math.PI/180),ULT_GAP=1,ULT_DASH_V=28,ULT_DASH_MAX=350,ULT_PUNCH_T=2000,ULT_N=18,ULT_WALK=1.5,ULT_PUSH_R=10,ULT_PUSH_V=18,ULT_THROW_V=27,KD=3; // KD: độ tắt dần vận tốc văng (quãng văng ≈ V/KD)
+const ULT_WIND=500,ULT_RANGE=5,ULT_CONE=Math.cos(20*Math.PI/180),ULT_GAP=1,ULT_DASH_V=28,ULT_DASH_MAX=350,ULT_PUNCH_T=2000,ULT_N=18,ULT_WALK=1.5,ULT_PUSH_R=10,ULT_PUSH_V=18,ULT_THROW_V=27,KD=3; // KD: độ tắt dần vận tốc văng (quãng văng ≈ V/KD)
 function ultTarget(a){
   const fx=-Math.sin(a.ry),fz=-Math.cos(a.ry);let best=null,bd=1e9;
   for(const t of agents){
@@ -310,7 +310,7 @@ function ultTick(a,now,dt){
     const fx=-Math.sin(a.ry),fz=-Math.cos(a.ry);
     t.stunBy=null;a.ult=null;a.tearCd=now+500;
     killAgent(a,t,now,true);
-    t.kv=[fx*ULT_THROW_V,fz*ULT_THROW_V];t.flyEnd=now+700; // cú cuối: văng ra xa, nằm ngửa bay đi
+    t.kv=[fx*ULT_THROW_V,fz*ULT_THROW_V];t.flyEnd=now+700;a.fin={t,until:now+1300}; // giữ camera theo dõi cú văng thêm ~1,3s // cú cuối: văng ra xa, nằm ngửa bay đi
     return null;
   }
   U.n=el/(ULT_PUNCH_T/ULT_N);
@@ -721,6 +721,14 @@ function ultShot(a,U){
   else if(i===1)P.set(mx-fx*.3,y+6,mz-fz*.3);
   else if(i===2)P.set(mx-rx*2,y+.45,mz-rz*2);
   else P.set(mx+fx*2.6+rx*1.2,y+1.2,mz+fz*2.6+rz*1.2);
+  return camFix(P,L);
+}
+// cú văng cuối: quay ngang từ xa, giữ cả người đấm lẫn nạn nhân đang bay trong khung hình
+function finShot(a,t){
+  const fx=-Math.sin(a.ry),fz=-Math.cos(a.ry),rx=-fz,rz=fx,mx=(a.x+t.x)/2,mz=(a.z+t.z)/2,w=3+Math.hypot(t.x-a.x,t.z-a.z)*.45;
+  return camFix(new THREE.Vector3(mx+rx*w,a.y+2,mz+rz*w),new THREE.Vector3(mx,a.y+.9,mz));
+}
+function camFix(P,L){
   const dx=P.x-L.x,dy=P.y-L.y,dz=P.z-L.z,dist=Math.hypot(dx,dy,dz)||1,dir=new THREE.Vector3(dx/dist,dy/dist,dz/dist);
   ray.set(L,dir);ray.far=dist; // không để tường che / xuyên tường
   const h=ray.intersectObjects(walls)[0];if(h)P.copy(L).addScaledVector(dir,Math.max(.8,h.distance-.3));
@@ -740,9 +748,9 @@ function loop(now){
   ray.set(head,back);ray.far=4.6;
   const hit=ray.intersectObjects(walls)[0];
   const d=hit?Math.max(.8,hit.distance-.3):4.6;
-  const dP=new THREE.Vector3().copy(head).addScaledVector(back,d),U=vt.ult,live=U&&U.tg&&(U.st==="dash"||U.st==="punch");
+  const dP=new THREE.Vector3().copy(head).addScaledVector(back,d),U=vt.ult,pl=U&&U.tg&&(U.st==="dash"||U.st==="punch"),fin=!pl&&vt.fin&&now<vt.fin.until?vt.fin:null,live=pl||fin;
   if(live){
-    const s=ultShot(vt,U);
+    const s=pl?ultShot(vt,U):finShot(vt,fin.t);
     if(!shotInit){camP.copy(dP);camL.copy(head);shotInit=true}
     const k=Math.min(1,dt*12);camP.lerp(s.P,k);camL.lerp(s.L,k);
   }else shotInit=false;
