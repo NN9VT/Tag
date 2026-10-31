@@ -60,7 +60,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.21</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.23</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đứng sát tường/thùng cũng không an toàn: đứng ở bên hông rồi bấm Xé để thò tay vào khe, giữ yên khoảng 1s sẽ giật được bảng tên. Bị thò tay thì xoay người lại để chặn</li><li>Hạ 5 đối thủ để mở khóa tuyệt chiêu</li></ol></div></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
@@ -393,9 +393,11 @@ function ultTick(a,now,dt){
     a.ry=Math.atan2(-dx,-dz);
     if(d>ULT_GAP+.05&&now<U.t0+ULT_DASH_MAX){const v=Math.min(ULT_DASH_V,(d-ULT_GAP)/Math.max(dt,.001));return[dx/d*v,dz/d*v]}
     if(d>ULT_GAP+.7){ultFail(a,now);return null} // bị chặn giữa đường, không tới được
-    U.st="punch";U.t0=now;
+    U.st="punch";U.t0=now;U.el=0;U.slow=TS[t.team]<=0&&!agents.some(x=>x.team===t.team&&x!==t&&!x.out); // U.el: thời gian của chiêu theo đồng hồ game (chậm lại được); U.slow: cú hạ này là mạng cuối
   }
-  const el=now-U.t0,nPun=Math.min(ULT_N,Math.floor(el/(ULT_PUNCH_T/ULT_N))+1);
+  U.el+=dt*1000;const el=U.el;
+  if(U.slow&&el>=12*(ULT_PUNCH_T/ULT_N))slowUntil=now+500; // mạng cuối: quay chậm từ cú đấm thứ 13
+  const nPun=Math.min(ULT_N,Math.floor(el/(ULT_PUNCH_T/ULT_N))+1);
   while(U.played<nPun){play("punch",(a.x+t.x)/2,(a.z+t.z)/2,U.played);U.played++} // mỗi cú đấm một tiếng, luân phiên cao-thấp
   if(el>=ULT_PUNCH_T){
     const fx=-Math.sin(a.ry),fz=-Math.cos(a.ry);
@@ -648,6 +650,34 @@ function botInput(a,dt,now){
   // đủ 5 charge: có địch phía trước trong tầm thì tung 18 cú đấm
   if(a.charge>=5&&!a.prone&&now>=a.tearCd&&a.y<=groundY(a.x,a.z)+.01){
     const ut=ultTarget(a);if(ut&&Math.hypot(ut.x-a.x,ut.z-a.z)<4.5){startUlt(a,now);return inp}
+  }
+  // đấu tay đôi bế tắc (hai bên xoay vòng quanh nhau): sau ~1,5s ở sát nhau mà không ai ra sau lưng được thì tung đồng xu, 50% lùi ra ~1s rồi tiếp cận lại
+  if(A.retreat){
+    if(now<A.retreat.until&&!a.prone){const st=steer(a,A.retreat.x,A.retreat.z);a.crouch=false;a.boost=1;inp.turn=st.turn;inp.mv=st.mv;return inp}
+    A.retreat=null;A.duelCd=now+3500;A.duelT=0;
+  }
+  {
+    const tg=A.tg;let stale=true;
+    if(tg&&!tg.torn&&!tg.prone&&A.mem.has(tg)&&now>=(A.duelCd||0)&&a.y<.5){
+      const dd=Math.hypot(a.x-tg.x,a.z-tg.z)||1;
+      if(dd<3&&((a.x-tg.x)*-Math.sin(tg.ry)+(a.z-tg.z)*-Math.cos(tg.ry))/dd>-.2){ // mục tiêu đang nhìn về phía bot: bot chưa ra được sau lưng
+        stale=false;A.duelT=(A.duelT||0)+dt;
+        if(A.duelT>1.5){
+          A.duelT=0;A.duelCd=now+1800; // lần sau mới xét lại
+          if(Math.random()<.5){ // lùi: chọn hướng xa mục tiêu mà bot quay tới nhanh nhất
+            const away=Math.atan2(a.x-tg.x,a.z-tg.z);let best=null,bd=9;
+            for(let k=-4;k<=4;k++){
+              const ang=away+k*.4,px=a.x+Math.sin(ang)*7,pz=a.z+Math.cos(ang)*7;
+              if(Math.abs(px)>24||Math.abs(pz)>24||!free(px,pz)||!clearSeg(a.x,a.z,px,pz))continue;
+              const want=Math.atan2(-(px-a.x),-(pz-a.z)),df=Math.abs(Math.atan2(Math.sin(want-a.ry),Math.cos(want-a.ry)));
+              if(df<bd){bd=df;best=[px,pz]}
+            }
+            if(best)A.retreat={x:best[0],z:best[1],until:now+1000};
+          }
+        }
+      }
+    }
+    if(stale)A.duelT=Math.max(0,(A.duelT||0)-dt*2);
   }
   const t=A.tg;let chase=null,cPr=false;
   if(t&&!t.torn&&A.mem.has(t)){
