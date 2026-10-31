@@ -55,7 +55,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.17</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.18</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đối thủ đứng dựa lưng vào tường hay vật cản: đứng sát bên hông rồi bấm Xé, chờ 0,5s để thò tay xé</li><li>Hạ 5 đối thủ để có tuyệt chiêu (có thời gian hồi)</li></ol></div></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
@@ -533,7 +533,7 @@ function proneGoal(a,t,px,pz){ // chỗ bot cần đứng: cách bảng tên .85
   return[bx+ux*PRONE_BD,bz+uz*PRONE_BD];
 }
 function tearReach(a,t){
-  const T=.25,ax=a.x+a.iv[0]*T,az=a.z+a.iv[1]*T,tx=t.x+t.iv[0]*T,tz=t.z+t.iv[1]*T;
+  const T=.25,Ta=Math.hypot(a.x-t.x,a.z-t.z)<1.1?0:T,ax=a.x+a.iv[0]*Ta,az=a.z+a.iv[1]*Ta,tx=t.x+t.iv[0]*T,tz=t.z+t.iv[1]*T;
   const lead=t.prone?PRONE_BD:.5,hx=ax-Math.sin(a.ry)*lead,hz=az-Math.cos(a.ry)*lead,
     bx=t.prone?tx-Math.sin(t.ry)*PRONE_BD:tx+Math.sin(t.ry)*.133,bz=t.prone?tz-Math.cos(t.ry)*PRONE_BD:tz+Math.cos(t.ry)*.133;
   const dx=ax-tx,dz=az-tz,d=Math.hypot(dx,dz)||.001;
@@ -615,7 +615,7 @@ function botInput(a,dt,now){
   const A=a.ai||(a.ai={next:now+Math.random()*400,sneakT:0,dvAt:0,dvCd:0,tdel:70+Math.random()*100,tg:null,gx:a.x,gz:a.z,pgx:0,pgz:0,direct:false,climb:null,sneak:false,path:[],pi:0,planAt:0,mem:new Map(),lx:a.x,lz:a.z,stuck:0,tw:0,sideT:0,sideDir:1,patrol:0,react:.3+Math.random()*.3});
   if(a.ult||a.stunBy){a.crouch=false;a.boost=1;return{mv:0,turn:0,jump:false}} // đang ra chiêu / đang bị đấm
   if(now>A.next){A.next=now+A.react*1000;think(a,A,now)}
-  const inp={mv:0,turn:0,jump:false};
+  const inp={mv:0,turn:0,jump:false};let hold=false;
   // đủ 5 charge: có địch phía trước trong tầm thì tung 18 cú đấm
   if(a.charge>=5&&!a.prone&&now>=a.tearCd&&a.y<=groundY(a.x,a.z)+.01){
     const ut=ultTarget(a);if(ut&&Math.hypot(ut.x-a.x,ut.z-a.z)<4.5){startUlt(a,now);return inp}
@@ -649,6 +649,7 @@ function botInput(a,dt,now){
     // xé khi dự đoán tay sẽ chạm bảng tên sau 0.25s: không cần dừng lại, cứ vừa chạy vừa xé
     if(d<2.4&&(fs||fc)&&tearReach(a,t)){
       a.crouch=!fs;
+      if(d<1.1&&Math.hypot(t.iv[0],t.iv[1])<1.5)hold=true; // đã sát lưng mục tiêu đang đứng yên: dừng lại, không húc đẩy nó đi
       if(!A.tw)A.tw=now+A.tdel;
       if(now>=A.tw&&now>=a.tearCd){tryTear(a,now,0,true);A.tw=0}
     }else if(alive(1-a.team)<=2&&reachTarget(a,true)===t){
@@ -676,6 +677,7 @@ function botInput(a,dt,now){
   }
   const sp=steer(a,gx,gz);inp.turn=sp.turn;inp.mv=sp.mv;
   if(cPr&&sp.d<3&&Math.abs(sp.df)>.6)inp.mv=0; // đuổi người nằm ở sát: quay mặt vào chỗ đứng trước rồi mới bước, tránh chạy vòng quanh (điểm nằm trong vòng quay của bot)
+  if(hold)inp.mv=0;
   let wantMove=inp.mv>0;
   if(A.climb&&a.y<.5){
     const b=A.climb,cx=Math.max(b.x-b.hw,Math.min(a.x,b.x+b.hw)),cz=Math.max(b.z-b.hd,Math.min(a.z,b.z+b.hd));
