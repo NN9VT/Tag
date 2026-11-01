@@ -35,10 +35,24 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #menu button,#over button{min-width:240px;padding:12px 20px;border-radius:14px;border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.14);color:#fff;font-size:18px;font-family:inherit}
 #menu button:disabled{opacity:.4}
 #menu small{display:block;font-size:12px;opacity:.85}
-#menu #btnFull,#menu #btnSnd,#menu #btnSpecial,#menu #btnKinMe{min-width:0;padding:6px 14px;font-size:13px;border-radius:10px;opacity:.85}
+#menu #btnFull,#menu #btnSnd{min-width:0;padding:6px 14px;font-size:13px;border-radius:10px;opacity:.85}
 .mrow{display:flex;gap:8px;align-items:center;justify-content:center}
 #vol{width:90px;accent-color:#ffb040}
 #sndBtn{display:none;position:absolute;top:calc(86px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));width:36px;height:36px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.4);background:rgba(0,0,0,.45);color:#fff;font-size:16px;z-index:4}
+#setup{display:none;position:absolute;inset:0;z-index:8;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
+#setup .card{position:relative;background:rgba(18,24,32,.97);border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:12px 18px;width:min(560px,92%);max-height:94%;overflow:auto;color:#fff;font-size:14px}
+#setup h2{margin:0 0 6px;font-size:18px;text-align:center}
+#setup button{font-family:inherit;color:#fff;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.5);border-radius:10px}
+#setup .stp button{min-width:30px;padding:2px 8px;font-size:16px}
+#setup .stp b{display:inline-block;min-width:28px;text-align:center}
+#setup .srow{display:flex;justify-content:space-between;align-items:center;margin:4px 0}
+#setup table{width:100%;border-collapse:collapse;margin:2px 0 4px}
+#setup th{font-size:12px;opacity:.7;font-weight:normal}
+#setup td{padding:3px 4px;text-align:center}#setup td:first-child{text-align:left}
+#setup .mrow{display:flex;gap:8px;justify-content:center;margin:6px 0}
+#setup .mrow button{padding:5px 12px;font-size:13px;opacity:.9}
+#setup #btnStart{display:block;margin:6px auto 0;min-width:200px;padding:10px 16px;font-size:17px}
+#setupX{position:absolute;right:8px;top:6px;padding:0 8px;font-size:15px}
 #rules{display:none;position:absolute;inset:0;z-index:8;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
 #rules .card{position:relative;background:rgba(18,24,32,.97);border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:16px 24px 14px;max-width:min(520px,86%);color:#fff}
 #rules h2{margin:0 0 8px;font-size:20px;text-align:center}
@@ -60,8 +74,13 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnSpecial"></button><button id="btnKinMe"></button></div><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.28</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.29</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đứng sát tường/thùng cũng không an toàn: đứng ở bên hông rồi bấm Xé để thò tay vào khe, giữ yên khoảng 1s sẽ giật được bảng tên. Bị thò tay thì xoay người lại để chặn</li><li>Hạ 5 đối thủ để mở khóa tuyệt chiêu</li></ol></div></div>
+<div id="setup"><div class="card"><button id="setupX" aria-label="Đóng">✕</button><h2>Cài đặt trận</h2>
+<div class="srow"><span>Số team</span><span class="stp"><button data-s="teams" data-d="-1">−</button><b id="vTeams">2</b><button data-s="teams" data-d="1">+</button></span></div>
+<table id="stbl"></table>
+<div class="mrow"><button id="btnSpecial"></button><button id="btnKinMe"></button></div>
+<button id="btnStart">Bắt đầu</button></div></div>
 <div id="spec">Bạn đã bị loại · chạm màn hình để đổi người xem</div>
 <div id="over"><h2 id="overTitle"></h2><div id="overSub"></div><table id="rank"></table><div class="btns"><button id="again">Chơi lại</button><button id="toMenu">Về menu</button></div></div>
 </div>
@@ -71,10 +90,12 @@ const $=id=>document.getElementById(id);
 const S=["ba","ko","ri","mu","ta","ze","lo","ni","sa","vu","ka","ha","ti","ro","me","du"];
 const genName=()=>{let n="";for(let i=0;i<3;i++)n+=S[Math.floor(Math.random()*S.length)];return n[0].toUpperCase()+n.slice(1)};
 const PAIRS=[[["Xanh lá",0x2fbf4a],["Đỏ",0xe02b2b]],[["Trắng",0xf2f2f2],["Đen",0x222222]],[["Vàng",0xf2c200],["Xanh dương",0x2b6be0]],[["Tím",0x8e44ad],["Xanh da trời nhạt",0x87ceeb]]];
-let TEAMS=PAIRS[Math.floor(Math.random()*PAIRS.length)];
+let curPair=Math.floor(Math.random()*PAIRS.length);
+const mkTeams=(i,j)=>[PAIRS[i][0],PAIRS[i][1],PAIRS[j][0],PAIRS[j][1]]; // 4 team: team 0/1 một cặp màu, team 2/3 một cặp màu khác
+let TEAMS=mkTeams(curPair,(curPair+1+Math.floor(Math.random()*(PAIRS.length-1)))%PAIRS.length);
 function newColors(){ // mỗi ván mới đổi cặp màu ngẫu nhiên (khác cặp vừa rồi)
-  const cur=PAIRS.indexOf(TEAMS);let i;do i=Math.floor(Math.random()*PAIRS.length);while(i===cur&&PAIRS.length>1);
-  TEAMS=PAIRS[i];agents.forEach(a=>{if(a.g)a.g.userData.M.color.set(TEAMS[a.team][1])});
+  let i;do i=Math.floor(Math.random()*PAIRS.length);while(i===curPair&&PAIRS.length>1);
+  curPair=i;TEAMS=mkTeams(i,(i+1+Math.floor(Math.random()*(PAIRS.length-1)))%PAIRS.length);agents.forEach(a=>{if(a.g)a.g.userData.M.color.set(TEAMS[a.team][1])});
 }
 const hex=n=>"#"+n.toString(16).padStart(6,"0");
 // ---- âm thanh: tổng hợp bằng Web Audio (không cần file), có khoảng cách và trái/phải theo vị trí người đang xem ----
@@ -232,9 +253,34 @@ function animate(g,spd,air,crouch,dt,t,prone,ta,dive,pun){
 }
 
 // ---- 10 nhân vật dùng chung luật: team 0 (có bạn) và team 1 ----
-const SP=[[[-20,-23.5],[-10,-23.5],[0,-23.5],[10,-23.5],[20,-23.5]],[[20,23.5],[10,23.5],[0,23.5],[-10,23.5],[-20,23.5]]]; // đội 0 dọc cạnh bắc, đội 1 dọc cạnh nam
-const TS=[10,10],agents=[];
-for(let i=0;i<10;i++)agents.push({team:i<5?0:1,idx:i%5,isMe:i===0,name:"",g:null,x:0,y:0,z:0,ry:0,vy:0,crouch:false,prone:false,supine:false,proneEnd:0,lastG:0,lastMv:1,iv:[0,0],spd:0,
+// ---- cài đặt trận: số team (2 đến 4), số thành viên và số mạng mỗi team; 20 nhân vật dựng sẵn, ai không tham gia thì ẩn ----
+let CFG={teams:2,size:[5,5,5,5],lives:[10,10,10,10]};
+try{const c=JSON.parse(localStorage.getItem("db_cfg"));if(c&&c.teams>=2&&c.teams<=4&&c.size.length===4&&c.lives.length===4&&c.size.every(v=>v>=1&&v<=5)&&c.lives.every(v=>v>=1&&v<=50))CFG=c}catch(e){}
+const saveCfg=()=>{try{localStorage.setItem("db_cfg",JSON.stringify(CFG))}catch(e){}};
+const kinIdx=n=>Math.floor((n-1)/2); // người đứng giữa đội hình
+const SP=[[],[],[],[]]; // vị trí xuất phát: team 0 cạnh bắc, 1 cạnh nam, 2 cạnh tây, 3 cạnh đông
+function buildSP(){
+  for(let t=0;t<4;t++){
+    const n=CFG.size[t],pos=[];
+    for(let i=0;i<n;i++){
+      const u=n===1?0:-20+40*i/(n-1);let x,z;
+      if(t===0){x=u;z=-23.5}else if(t===1){x=-u;z=23.5}else if(t===2){x=-23.5;z=u}else{x=23.5;z=-u}
+      if(!free(x,z)){ // bị thùng chắn: tìm chỗ trống gần nhất
+        let best=null,bd=1e9;
+        for(let dx=-4;dx<=4;dx+=.5)for(let dz=-4;dz<=4;dz+=.5){
+          const px=t<2?x+dz:x+(t===2?Math.abs(dx):-Math.abs(dx)),pz=t<2?z+(t===0?Math.abs(dx):-Math.abs(dx)):z+dz;
+          if(Math.abs(px)<24&&Math.abs(pz)<24&&free(px,pz)){const d=Math.hypot(dx,dz);if(d<bd){bd=d;best=[px,pz]}}
+        }
+        if(best){x=best[0];z=best[1]}
+      }
+      pos.push([x,z]);
+    }
+    for(let i=0;i<5;i++)SP[t][i]=pos[i%n];
+  }
+}
+buildSP();
+const TS=[10,10,10,10],agents=[];
+for(let i=0;i<20;i++)agents.push({team:Math.floor(i/5),idx:i%5,slot:i%5,on:i<10,isMe:i===0,name:"",g:null,x:0,y:0,z:0,ry:0,vy:0,crouch:false,prone:false,supine:false,proneEnd:0,lastG:0,lastMv:1,iv:[0,0],spd:0,
   tearT:-9999,tearCd:0,tearAt:0,tearAir:false,torn:0,hd:0,t:0,ct:1+Math.random()*3,thinkT:0,hit:false,kills:0,deaths:0,nick:"",out:false,
   charge:0,ult:null,stunBy:null,kv:[0,0],fv:[0,0],flyEnd:0});
 const me=agents[0],crBtn=document.querySelector('[data-k="crouch"]');
@@ -255,10 +301,10 @@ const BEAMS=[];
 const lighten=h=>{const r=h>>16&255,g=h>>8&255,b=h&255,m=v=>Math.round(v+(255-v)*.55);return m(r)<<16|m(g)<<8|m(b)};
 function updSpecialUI(){$("btnSpecial").textContent="⚡ Chế độ đặc biệt: "+(special?"BẬT":"TẮT");$("btnKinMe").style.display=special?"":"none";$("btnKinMe").textContent="Bạn là Kineticeer: "+(kinMe?"CÓ":"KHÔNG")}
 function assignKin(){ // người đứng giữa đội hình mỗi team là Kineticeer (bạn đứng giữa nếu chọn làm Kineticeer)
-  agents.forEach((a,i)=>{a.idx=i%5;a.kin=false;a.kb=null;a.kNext=0});
+  agents.forEach(a=>{a.idx=a.slot;a.kin=false;a.kb=null;a.kNext=0});
   if(!special||training)return;
-  if(kinMe){const m=agents.find(x=>x.team===agents[0].team&&x.idx===2);m.idx=agents[0].idx;agents[0].idx=2}
-  agents.forEach(a=>{if(a.idx===2)a.kin=true});
+  if(kinMe){const ki=kinIdx(CFG.size[agents[0].team]),m=agents.find(x=>x.on&&x.team===agents[0].team&&x.idx===ki);m.idx=agents[0].idx;agents[0].idx=ki}
+  agents.forEach(a=>{if(a.on&&a.idx===kinIdx(CFG.size[a.team]))a.kin=true});
 }
 function kinReach(a,fx,fz){ // chiều dài tia: tới khi chạm vật cản có đỉnh cao hơn chân người bắn
   for(let s=.4;s<=60;s+=.25){const px=a.x+fx*s,pz=a.z+fz*s;
@@ -328,7 +374,8 @@ function respawn(a,first){
   if(a.isMe)crBtn.classList.remove("on");
   a.g.position.set(a.x,0,a.z);a.g.rotation.y=a.ry;
 }
-agents.forEach(a=>respawn(a,true));
+function applyOn(){agents.forEach(a=>{if(!a.on){a.out=true;a.torn=Infinity;a.g.visible=false}})}
+agents.forEach(a=>respawn(a,true));applyOn();
 
 // đẩy nhau: mỗi bên bị cộng thêm tốc độ đối phương đang áp vào mình; va chạm sâu thì chặn cứng
 function pushVel(a,vx,vz){
@@ -417,7 +464,11 @@ function killAgent(a,hit,now,viaUlt){
   if(hit.isMe)play(hit.out?"out":"hurt");
   if(ready&&a.isMe)play("ready");
   if(ready){FEED.push({until:performance.now()+4000,h:dot(a.team)+a.name+" đã sẵn sàng 18 cú đấm! 👊"});if(FEED.length>4)FEED.shift();renderFeed()}
-  if(!endAt&&!agents.some(t=>t.team===hit.team&&!t.out)){endAt=now+(viaUlt?3300:2000);endLt=hit.team} // mạng cuối: chờ để thấy cảnh hạ, rồi mới hiện bảng điểm
+  if(hit.out&&!agents.some(t=>t.team===hit.team&&!t.out)){ // cả team bị loại
+    const left=[...new Set(agents.filter(t=>!t.out).map(t=>t.team))];
+    if(left.length<=1){if(!endAt){endAt=now+(viaUlt?3300:2000);endLt=left.length?left[0]:-1}} // còn 1 team: team đó thắng
+    else{FEED.push({until:performance.now()+4000,h:dot(hit.team)+"Team "+TEAMS[hit.team][0]+" bị loại hết!"});if(FEED.length>4)FEED.shift();renderFeed()}
+  } // mạng cuối: chờ để thấy cảnh hạ, rồi mới hiện bảng điểm
 }
 
 // ---- tuyệt chiêu "18 cú đấm": thủ thế 0,5s (còn sơ hở) -> hất văng người xung quanh -> lướt tới địch gần nhất phía trước -> 18 cú đấm trong 2s (bất tử, đi chậm về trước, đẩy nạn nhân đi theo) -> cú cuối hất nạn nhân văng và hạ ----
@@ -464,7 +515,7 @@ function ultTick(a,now,dt){
     a.ry=Math.atan2(-dx,-dz);
     if(d>ULT_GAP+.05&&now<U.t0+ULT_DASH_MAX){const v=Math.min(ULT_DASH_V,(d-ULT_GAP)/Math.max(dt,.001));return[dx/d*v,dz/d*v]}
     if(d>ULT_GAP+.7){ultFail(a,now);return null} // bị chặn giữa đường, không tới được
-    U.st="punch";U.t0=now;U.el=0;U.slow=TS[t.team]<=0&&!agents.some(x=>x.team===t.team&&x!==t&&!x.out); // U.el: thời gian của chiêu theo đồng hồ game (chậm lại được); U.slow: cú hạ này là mạng cuối
+    U.st="punch";U.t0=now;U.el=0;U.slow=TS[t.team]<=0&&!agents.some(x=>x.team===t.team&&x!==t&&!x.out)&&new Set(agents.filter(x=>!x.out&&x.team!==t.team).map(x=>x.team)).size<=1; // U.el: thời gian của chiêu theo đồng hồ game (chậm lại được); U.slow: cú hạ này là mạng cuối
   }
   U.el+=dt*1000;const el=U.el;
   if(U.slow&&el>=12*(ULT_PUNCH_T/ULT_N))slowUntil=now+500; // mạng cuối: quay chậm từ cú đấm thứ 13
@@ -502,7 +553,7 @@ function moveFlying(a,dt){ // người đã bị hạ nhưng đang bị văng đ
 const FEED=[],dot=t=>'<span class="dot" style="background:'+hex(TEAMS[t][1])+'"></span>';
 const alive=t=>agents.filter(a=>a.team===t&&!a.out).length;
 function hudUpdate(){
-  $("hud").innerHTML=(training?"🎯 Tập luyện · Đã hạ <b>"+me.kills+"</b>":dot(0)+" ♥<b>"+TS[0]+"</b> · "+alive(0)+" người<br>"+dot(1)+" ♥<b>"+TS[1]+"</b> · "+alive(1)+" người")+"<br>👊 Tuyệt chiêu "+(me.charge>=5?"<b>SẴN SÀNG</b>":"<b>"+me.charge+"/5</b>");
+  $("hud").innerHTML=(training?"🎯 Tập luyện · Đã hạ <b>"+me.kills+"</b>":[0,1,2,3].filter(t=>t<CFG.teams).map(t=>dot(t)+" ♥<b>"+TS[t]+"</b> · "+alive(t)+" người").join("<br>"))+"<br>👊 Tuyệt chiêu "+(me.charge>=5?"<b>SẴN SÀNG</b>":"<b>"+me.charge+"/5</b>");
   const tb=document.querySelector('[data-k="tear"]');tb.classList.toggle("ult",me.charge>=5);tb.textContent=me.charge>=5?"👊":"🏷️";
 }
 function renderFeed(){
@@ -662,9 +713,9 @@ function canHear(a,t){
 const boardY=t=>t.y+(t.prone?.2:t.crouch?.391:.854);
 const fitOk=(a,t,c)=>{const dy=boardY(t)-(a.y+(c?.364:.994));return dy>=-.4&&dy<=.47};
 function patrolGoal(a,A){
-  const e=a.team?-1:1,cl=v=>Math.max(-23,Math.min(23,v));
+  const bx=[0,0,1,-1][a.team],bz=[1,-1,0,0][a.team],cl=v=>Math.max(-23,Math.min(23,v));
   for(let i=0;i<30;i++){
-    const x=cl((Math.random()*2-1)*20),z=cl((Math.random()*2-1+e*.5)*20);
+    const x=cl((Math.random()*2-1+bx*.5)*20),z=cl((Math.random()*2-1+bz*.5)*20);
     if(free(x,z)){A.gx=x;A.gz=z;return}
   }
 }
@@ -1006,12 +1057,13 @@ resize();hudUpdate();
 // ---- menu, mạng của hai team (15 mạng mỗi bên), kết thúc ván ----
 let mode="menu",ang=0,spec=0;
 const showControls=v=>{["dpad","acts"].forEach(i=>$(i).style.display=v?"":"none")};
+function applyCfg(){buildSP();agents.forEach(a=>{a.on=a.team<CFG.teams&&a.slot<CFG.size[a.team]})}
 function startMatch(){
   newColors();endAt=0;slowUntil=0;
   training=false;setArena(false);$("trainUI").style.display="none";$("sndBtn").style.display="block";setTimeout(()=>play("whistle"),250);
-  assignKin();TS[0]=TS[1]=10;spec=0;$("spec").style.display="none";FEED.length=0;renderFeed();
+  applyCfg();assignKin();for(let t=0;t<4;t++)TS[t]=CFG.lives[t];spec=0;$("spec").style.display="none";FEED.length=0;renderFeed();
   K.up=K.down=K.left=K.right=K.jump=false;knob.style.transform="";
-  agents.forEach(a=>{a.kills=0;a.deaths=0;a.charge=0;a.ai=null;a.tearCd=0;a.tearT=-9999;a.tearAt=0;respawn(a,true);a.nick=a.name});
+  agents.forEach(a=>{a.kills=0;a.deaths=0;a.charge=0;a.ai=null;a.tearCd=0;a.tearT=-9999;a.tearAt=0;respawn(a,true);a.nick=a.name});applyOn();
   hudUpdate();$("hud").style.display="";$("menu").style.display="none";$("over").style.display="none";showControls(true);mode="play";
 }
 // tập luyện: đấu trường trống, 3 bot đứng yên, hạ xong tự hồi sinh tại chỗ, không có thắng/thua; tuyệt chiêu bật sẵn (có nút tắt để thử xé thường)
@@ -1022,7 +1074,7 @@ function trainUlt(on){
 function startTraining(){
   newColors();endAt=0;slowUntil=0;
   training=true;setArena(true);$("sndBtn").style.display="block";setTimeout(()=>play("whistle"),250);
-  assignKin();TS[0]=TS[1]=999;spec=0;$("spec").style.display="none";FEED.length=0;renderFeed();
+  agents.forEach((a,i)=>{a.on=TRAIN_IDX.includes(i)});assignKin();TS[0]=TS[1]=999;spec=0;$("spec").style.display="none";FEED.length=0;renderFeed();
   K.up=K.down=K.left=K.right=K.jump=false;knob.style.transform="";
   agents.forEach((a,i)=>{
     a.kills=0;a.deaths=0;a.charge=0;a.ai=null;a.tearCd=0;a.tearT=-9999;a.tearAt=0;respawn(a,true);a.nick=a.name;
@@ -1039,15 +1091,15 @@ function resetTraining(){
 function toMenu(){
   newColors();endAt=0;slowUntil=0;
   training=false;setArena(false);$("trainUI").style.display="none";$("sndBtn").style.display="none";
-  mode="menu";spec=0;$("spec").style.display="none";assignKin();agents.forEach(a=>respawn(a,true));
+  mode="menu";spec=0;$("spec").style.display="none";applyCfg();assignKin();agents.forEach(a=>respawn(a,true));applyOn();
   $("over").style.display="none";$("menu").style.display="flex";$("hud").style.display="none";showControls(false);
 }
-function endMatch(lt){
+function endMatch(w){
   if(mode!=="play")return;mode="over";showControls(false);
-  const win=lt!==me.team,rows=agents.slice().sort((x,y)=>y.kills-x.kills||x.deaths-y.deaths);
+  const win=w===me.team,rows=agents.slice().sort((x,y)=>y.kills-x.kills||x.deaths-y.deaths);
   play(win?"win":"lose");
   $("overTitle").textContent=win?"Bạn thắng! 🎉":"Bạn thua 😢";
-  $("overSub").textContent="Team "+TEAMS[1-lt][0]+" thắng · Team "+TEAMS[lt][0]+" bị loại hết";
+  $("overSub").textContent=w<0?"Hòa":"Team "+TEAMS[w][0]+" thắng"+(CFG.teams===2?" · Team "+TEAMS[1-w][0]+" bị loại hết":" · các team còn lại bị loại hết");
   $("rank").innerHTML="<tr><th>#</th><th>Người chơi</th><th>Hạ</th><th>Bị hạ</th></tr>"+rows.map((a,i)=>"<tr"+(a===me?' class="me"':"")+"><td>"+(i+1)+"</td><td>"+dot(a.team)+a.nick+(a===me?" (bạn)":"")+"</td><td>"+a.kills+"</td><td>"+a.deaths+"</td></tr>").join("");
   $("over").style.display="flex";
 }
@@ -1065,7 +1117,23 @@ const closeRules=()=>{$("rules").style.display="none"};
 $("rulesX").onclick=closeRules;$("rules").addEventListener("click",e=>{if(e.target===$("rules"))closeRules()});
 $("btnSpecial").onclick=()=>{special=!special;try{localStorage.setItem("db_sp",special?"1":"0")}catch(e){}updSpecialUI()};
 $("btnKinMe").onclick=()=>{kinMe=!kinMe;try{localStorage.setItem("db_km",kinMe?"1":"0")}catch(e){}updSpecialUI()};updSpecialUI();
-$("btnBot").onclick=()=>{auInit();goFull();startMatch()};
+const clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
+function renderSetup(){
+  $("vTeams").textContent=CFG.teams;
+  let h="<tr><th></th><th>Thành viên</th><th>Số mạng</th></tr>";
+  for(let t=0;t<CFG.teams;t++)h+="<tr><td>Team "+(t+1)+(t===0?" (bạn)":"")+"</td><td class=\"stp\"><button data-s=\"size\" data-t=\""+t+"\" data-d=\"-1\">−</button><b>"+CFG.size[t]+"</b><button data-s=\"size\" data-t=\""+t+"\" data-d=\"1\">+</button></td><td class=\"stp\"><button data-s=\"lives\" data-t=\""+t+"\" data-d=\"-5\">−5</button><button data-s=\"lives\" data-t=\""+t+"\" data-d=\"-1\">−</button><b>"+CFG.lives[t]+"</b><button data-s=\"lives\" data-t=\""+t+"\" data-d=\"1\">+</button><button data-s=\"lives\" data-t=\""+t+"\" data-d=\"5\">+5</button></td></tr>";
+  $("stbl").innerHTML=h;updSpecialUI();
+}
+$("setup").addEventListener("click",e=>{
+  if(e.target===$("setup")){$("setup").style.display="none";return}
+  const b=e.target.closest("[data-s]");if(!b)return;
+  const s=b.dataset.s,t=+b.dataset.t,d=+b.dataset.d;
+  if(s==="teams")CFG.teams=clampN(CFG.teams+d,2,4);else if(s==="size")CFG.size[t]=clampN(CFG.size[t]+d,1,5);else CFG.lives[t]=clampN(CFG.lives[t]+d,1,50);
+  saveCfg();renderSetup();
+});
+$("setupX").onclick=()=>{$("setup").style.display="none"};
+$("btnBot").onclick=()=>{renderSetup();$("setup").style.display="flex"};
+$("btnStart").onclick=()=>{$("setup").style.display="none";auInit();goFull();startMatch()};
 $("btnTrain").onclick=()=>{auInit();goFull();startTraining()};
 $("btnSnd").onclick=$("sndBtn").onclick=()=>{auInit();AU.on=!AU.on;auApply()};
 $("vol").oninput=()=>{auInit();AU.vol=$("vol").value/100;if(AU.vol>0)AU.on=true;auApply()};
@@ -1114,7 +1182,7 @@ function loop(now){
   kinVisuals(now);
   for(const a of agents){const gl=a.g&&a.g.userData.glow;if(gl){const on=a.charge>=5&&!a.torn&&!a.out;gl.visible=on;if(on)gl.material.opacity=.65+.35*Math.sin(now/130)}}
   if(mode==="menu"){ang+=dt*.15;cam.position.set(Math.sin(ang)*34,15,Math.cos(ang)*34);cam.lookAt(0,1,0);ren.render(scene,cam);return}
-  const vt=me.out?(()=>{const l=agents.filter(a=>a.team===me.team&&!a.out);return l.length?l[spec%l.length]:me})():me;
+  const vt=me.out?(()=>{let l=agents.filter(a=>a.team===me.team&&!a.out);if(!l.length)l=agents.filter(a=>!a.out);return l.length?l[spec%l.length]:me})():me;
   LS.x=vt.x;LS.z=vt.z;LS.ry=vt.ry;
   { // thanh thò tay: người xé thấy tiến trình, người bị thò tay thấy cảnh báo
     let rs=null;
