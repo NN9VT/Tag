@@ -82,7 +82,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trKin">⚡ Kinetikeer: TẮT</button><button id="trMar">⚖️ Marshal: TẮT</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.49</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.50</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đứng sát tường/thùng cũng không an toàn: đứng ở bên hông rồi bấm Xé để thò tay vào khe, giữ yên khoảng 1s sẽ giật được bảng tên. Bị thò tay thì xoay người lại để chặn</li><li>Hạ 4 đối thủ để mở khóa tuyệt chiêu</li></ol></div></div>
 <div id="setup"><div class="card"><button id="setupX" aria-label="Đóng">✕</button><h2>Cài đặt trận</h2>
 <div class="srow"><span>Số team</span><span class="stp"><button data-s="teams" data-d="-1">−</button><b id="vTeams">2</b><button data-s="teams" data-d="1">+</button></span></div>
@@ -97,7 +97,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 const $=id=>document.getElementById(id);
 const S=["ba","ko","ri","mu","ta","ze","lo","ni","sa","vu","ka","ha","ti","ro","me","du"];
 const genName=()=>{let n="";for(let i=0;i<3;i++)n+=S[Math.floor(Math.random()*S.length)];return n[0].toUpperCase()+n.slice(1)};
-const PAIRS=[[["Xanh lá",0x2fbf4a],["Đỏ",0xe02b2b]],[["Trắng",0xf2f2f2],["Đen",0x222222]],[["Vàng",0xf2c200],["Xanh dương",0x2b6be0]],[["Tím",0x8e44ad],["Xanh da trời nhạt",0x87ceeb]]];
+const PAIRS=[[["Xanh lá",0x2fbf4a],["Đỏ",0xe02b2b]],[["Trắng",0xf2f2f2],["Đen",0x222222]],[["Vàng",0xf2c200],["Xanh dương",0x2b6be0]],[["Tím",0x8e44ad],["Xanh da trời",0x87ceeb]]];
 let curPair=Math.floor(Math.random()*PAIRS.length);
 const mkTeams=(i,j)=>[PAIRS[i][0],PAIRS[i][1],PAIRS[j][0],PAIRS[j][1]]; // 4 team: team 0/1 một cặp màu, team 2/3 một cặp màu khác
 let TEAMS=mkTeams(curPair,(curPair+1+Math.floor(Math.random()*(PAIRS.length-1)))%PAIRS.length);
@@ -320,7 +320,7 @@ function randPos(a){
 
 // ---- chế độ đặc biệt: Kinetikeer ----
 let special=false,kinMe=false,lordMe=false;try{special=localStorage.getItem("db_sp")==="1";kinMe=localStorage.getItem("db_km")==="1";lordMe=localStorage.getItem("db_lm")==="1"&&!kinMe}catch(e){}
-const KIN_EVERY=5000,KIN_CHARGE=100,KIN_BEAM_V=120,KIN_H=1.43,KIN_HW=.5,KIN_HIT=.56,KIN_V=20,KIN_LIE=1500,KIN_SPD=.85,KIN_HOV=.5;
+const KIN_EVERY=5000,KIN_CHARGE=100,KIN_BEAM_V=120,KIN_H=1.43,KIN_HW=.5,KIN_HIT=.56,KIN_V=20,KIN_LIE=1500,KIN_SPD=.85,KIN_BOT_SPD=.9,KIN_HOV=.5,KIN_RISE=2.2,KIN_RISE_BOT=3.4; // bot Kinetikeer di chuyển/xoay 90% bot thường; kẻ hủy diệt bay lên mặt thùng chậm hơn nhảy (bot nhanh hơn người chơi một chút)
 const PEND=[]; // hiệu ứng trúng tia xảy ra trễ theo khoảng cách (gần văng trước)
 const kinLethal=a=>a.kin&&a.charge>=ULT_NEED; // đủ 4 mạng hạ: tia giết người và Kinetikeer bay lơ lửng
 const kinFly=a=>kinLethal(a)&&!a.prone&&!a.torn&&!a.out&&!a.stunBy;
@@ -514,7 +514,7 @@ function resolveTear(a,now){
     const h=Math.hypot(hx-V1.x,hz-V1.z),dy=V1.y-hy
     const dx=a.x-t.x,dz=a.z-t.z,dist=Math.hypot(dx,dz)||.001;
     const behind=t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/dist>=.5;
-    if(behind&&h<=.75+(a.dive?.2:0)+(a.lord?.45:0)+(t.lord?.25:0)&&dy>=(a.lord?-1.4:-.4)&&dy<=.47+(t.lord?.3:0)){hit=t;break} // Marshal xé: phạm vi rộng hơn, người ngồi vẫn dính; Marshal bị xé: bảng tên to nên dễ trúng
+    if(behind&&h<=.75+(a.dive?.2:0)+(a.lord?.3:0)+(t.lord?.25:0)&&dy>=(a.lord?-1.4:-.4)&&dy<=.47+(t.lord?.3:0)){hit=t;break} // Marshal xé: phạm vi rộng hơn, người ngồi vẫn dính; Marshal bị xé: bảng tên to nên dễ trúng
   }
   if(hit){killAgent(a,hit,now,false);return true}
   return false;
@@ -816,7 +816,7 @@ function tearReach(a,t){
   const lead=t.prone?PRONE_BD:.5,hx=ax-Math.sin(a.ry)*lead,hz=az-Math.cos(a.ry)*lead,
     bx=t.prone?tx-Math.sin(t.ry)*PRONE_BD:tx+Math.sin(t.ry)*.133,bz=t.prone?tz-Math.cos(t.ry)*PRONE_BD:tz+Math.cos(t.ry)*.133;
   const dx=ax-tx,dz=az-tz,d=Math.hypot(dx,dz)||.001;
-  return(t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.55)&&Math.hypot(hx-bx,hz-bz)<=(t.prone?.65:.9+(a.lord?.45:0)+(t.lord?.25:0)); // Marshal xé tầm rộng hơn (+.45), bảng tên Marshal bị xé dễ trúng hơn (+.25)
+  return(t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.55)&&Math.hypot(hx-bx,hz-bz)<=(t.prone?.65:.9+(a.lord?.3:0)+(t.lord?.25:0)); // Marshal xé tầm rộng hơn (+.3), bảng tên Marshal bị xé dễ trúng hơn (+.25)
 }
 function segHits(x1,z1,x2,z2,b,m=0){
   let t0=0,t1=1;const dx=x2-x1,dz=z2-z1;
@@ -859,7 +859,7 @@ function think(a,A,now){
     if((a.x-t.x)*-Math.sin(t.ry)+(a.z-t.z)*-Math.cos(t.ry)<0)sc-=3;
     if(sc<bs){bs=sc;best=t}
   }
-  const wasSneak=A.sneak;A.tg=best;A.climb=null;A.direct=a.y>.5;A.sneak=false;
+  const wasSneak=A.sneak;A.tg=best;A.climb=null;A.direct=a.y>.5||kinFly(a);A.sneak=false;
   if(!best){
     if(now>A.patrol||Math.hypot(A.gx-a.x,A.gz-a.z)<1.5){patrolGoal(a,A);A.patrol=now+9000;A.path=[]}
   }else{
@@ -936,9 +936,12 @@ function kinBot(a,A,now){
   // đồng đội gần nhất: lùi về phía sau họ (so với địch) để được che
   let ally=null,ad=1e9;for(const c of agents)if(c!==a&&c.team===a.team&&!c.torn&&!c.out){const d=Math.hypot(c.x-a.x,c.z-a.z);if(d<ad){ad=d;ally=c}}
   const behind=()=>{if(!ally)return null;const dx=ally.x-ex,dz=ally.z-ez,m=Math.hypot(dx,dz)||1,gx=ally.x+dx/m*2.5,gz=ally.z+dz/m*2.5;return free(gx,gz)&&Math.abs(gx)<24&&Math.abs(gz)<24&&clearSeg(a.x,a.z,gx,gz)?[gx,gz]:null};
+  if(kinLethal(a)&&ed<6&&groundY(ex,ez)>groundY(a.x,a.z)+.2){const r=steer(a,ex,ez);return{mv:r.mv,turn:r.turn,jump:false}} // kẻ hủy diệt không xé được: mục tiêu đứng trên thùng thì tiến vào, đụng thùng thì bay lên mặt thùng
   if(ed<6)return null; // địch tới gần: cận chiến như bot thường, không bỏ chạy
   const flyK=kinLethal(a);
-  if(a.y>.5&&!flyK)return face; // đang đứng trên thùng: giữ chỗ để ngắm
+  if(a.y>.5&&!flyK){ // đang trên thùng: giữ chỗ để ngắm; đang bay trên không sau cú nhảy lên thùng: tiếp tục tiến vào thùng (trước đây dừng lại nên rơi xuống)
+    if(A.perchJ&&now<A.perchJ.until&&a.y>groundY(a.x,a.z)+.02){const s2=steer(a,A.perchJ.x,A.perchJ.z);return{mv:1,turn:s2.turn,jump:false}}
+    return face}
   if(ally&&ed<=14){ // 2: đồng đội đang đứng trên đường bắn tới địch (ở gần địch): bước ngang để lấy góc bắn
     const fx=(ex-a.x)/ed,fz=(ez-a.z)/ed;let bad=null;
     for(const c of agents){if(c===a||c.team!==a.team||c.torn||c.out)continue;const dx=c.x-a.x,dz=c.z-a.z,s2=dx*fx+dz*fz,lat=Math.abs(dx*-fz+dz*fx);if(s2>0&&s2<ed+1&&lat<KIN_HIT+.4&&Math.hypot(c.x-ex,c.z-ez)<4){bad=c;break}}
@@ -956,13 +959,13 @@ function kinBot(a,A,now){
       if(now-A.perchT>6000){A.perchT=0;A.perchCd=now+10000}
       else{
         const cx=Math.max(best.x-best.hw,Math.min(a.x,best.x+best.hw)),cz=Math.max(best.z-best.hd,Math.min(a.z,best.z+best.hd)),vx=a.x-cx,vz=a.z-cz,mm=Math.hypot(vx,vz)||1;
-        if(mm<1.3){const s2=steer(a,best.x,best.z),ok=Math.abs(s2.df)<.3;return{mv:ok?1:0,turn:s2.turn,jump:ok}}
+        if(mm<1.3){const s2=steer(a,best.x,best.z),ok=Math.abs(s2.df)<.3;if(ok)A.perchJ={x:best.x,z:best.z,until:now+1000};return{mv:ok?1:0,turn:s2.turn,jump:ok}}
         const gx=cx+vx/mm*.8,gz=cz+vz/mm*.8;
         if(clearSeg(a.x,a.z,gx,gz)){const r=steer(a,gx,gz);return{mv:r.mv,turn:r.turn,jump:false}}
       }
     }else A.perchT=0;
   }
-  if(ed<=14&&a.y<.5){ // vật cản chắn ngay trước mặt đường bắn tới địch: đổi chỗ tới nơi bắn thẳng được
+  if(ed<=14&&(a.y<.5||flyK)){ // vật cản chắn ngay trước mặt đường bắn tới địch: đổi chỗ tới nơi bắn thẳng được
     const yb=flyK?groundY(a.x,a.z)+.5:a.y,clr=(px,pz)=>{const dx=ex-px,dz=ez-pz,dd=Math.hypot(dx,dz)||1;return kinReach({x:px,z:pz,y:a.y},dx/dd,dz/dd,yb)>=dd-.6};
     if(!clr(a.x,a.z)){
       if(!A.kRp||now>A.kRp.until||Math.hypot(A.kRp.x-a.x,A.kRp.z-a.z)<.6){
@@ -975,6 +978,7 @@ function kinBot(a,A,now){
           if(bg){A.kRp={x:bg[0],z:bg[1],until:now+2500};break}}
       }
       if(A.kRp){const r=steer(a,A.kRp.x,A.kRp.z);return{mv:r.mv,turn:r.turn,jump:false}}
+      if(flyK){const r=steer(a,ex,ez);return{mv:r.mv,turn:r.turn,jump:false}} // kẻ hủy diệt không tìm được chỗ bắn thẳng (mục tiêu trên thùng): tiến thẳng vào, đụng thùng thì bay lên mặt thùng
     }else A.kRp=null;
   }
   if(ed<=14){
@@ -1111,7 +1115,7 @@ function step(a,inp,dt,now){
   if(a.ult||a.stunBy||kf){inp={mv:0,turn:0,jump:false};a.tearAt=0;a.dvOn=false}
   if(a.rc){reachTick(a,now,inp);if(a.rc)inp={mv:0,turn:0,jump:false}}
   const lock=a.prone;
-  let nr=a.ry+(lock?0:inp.turn*(a.isMe?1.45:2.0)*(a.kin?KIN_SPD:1)*dt);
+  let nr=a.ry+(lock?0:inp.turn*(a.isMe?1.45:2.0)*(a.kin?(a.isMe?KIN_SPD:KIN_BOT_SPD):1)*dt);
   if(nr!==a.ry){
     const hn=headPos(a,nr);
     if(headBlocked(hn,headPos(a,a.ry))){
@@ -1121,7 +1125,7 @@ function step(a,inp,dt,now){
     }
   }
   a.ry=nr;
-  const mv=lock?0:inp.mv,base=(a.crouch?2.52:5.02)*(a.kin?KIN_SPD:1)*(a.boost||1)*(a.y>groundY(a.x,a.z)+.01&&!kinFly(a)?AIR_K*(a.lord?Math.sqrt(LORD_K):1):1),v=mv>0?base:base*.6;
+  const mv=lock?0:inp.mv,base=(a.crouch?2.52:5.02)*(a.kin?(a.isMe?KIN_SPD:KIN_BOT_SPD):1)*(a.boost||1)*(a.y>groundY(a.x,a.z)+.01&&!kinFly(a)?AIR_K*(a.lord?Math.sqrt(LORD_K):1):1),v=mv>0?base:base*.6;
   const bst=(a.dvEnd&&now<a.dvEnd&&!lock&&a.y>groundY(a.x,a.z)+.01)?DIVE_V:0;
   a.spd=mv*v;a.iv=[-Math.sin(a.ry)*(mv*v+bst),-Math.cos(a.ry)*(mv*v+bst)];if(mv)a.lastMv=mv;
   if(uv){a.iv=[uv[0],uv[1]];a.spd=Math.min(5,Math.hypot(uv[0],uv[1]))}
@@ -1148,7 +1152,10 @@ function step(a,inp,dt,now){
     if(resolveTear(a,now)){a.dvOn=false;a.tearCd=now+500}
     else if(onG){a.dvOn=false;a.tearCd=now+500;a.prone=true;a.noisy=true;a.proneEnd=0;a.supine=false;a.proneDur=1300;play("fall",a.x,a.z)} // xé hụt khi lao: té nằm 1,3s
   }
-  if(kinFly(a)){a.vy=0;a.jmv=0;a.y+=(gy+KIN_HOV-a.y)*Math.min(1,5*dt)} // tia diệt: bay lơ lửng, không nhảy
+  if(kinFly(a)){a.vy=0;a.jmv=0;
+    if(a.hit&&mv>0){const fx=-Math.sin(a.ry),fz=-Math.cos(a.ry),g2=Math.max(groundY(a.x+fx*.6,a.z+fz*.6),groundY(a.x+fx*.9,a.z+fz*.9));if(g2>gy&&g2<=1.5){a.kcT=now+900;a.kcTop=g2}} // đụng thùng thấp phía trước: bay lên mặt thùng
+    let want=gy+KIN_HOV;if(a.kcT>now)want=Math.max(want,a.kcTop+KIN_HOV);
+    if(want>a.y)a.y=Math.min(want,a.y+(a.isMe?KIN_RISE:KIN_RISE_BOT)*dt);else a.y+=(want-a.y)*Math.min(1,5*dt)} // tia diệt: bay lơ lửng, không nhảy; lên thùng bằng cách bay từ từ
   else{
   if(inp.jump&&onG&&!a.crouch&&!lock){a.vy=a.lord?8*Math.sqrt(LORD_K):8;a.jmv=mv;play("jump",a.x,a.z)}
   a.vy-=20*dt;a.y+=a.vy*dt;
