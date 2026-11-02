@@ -79,7 +79,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trKin">⚡ Kinetikeer: TẮT</button><button id="trMar">⚖️ Marshal: TẮT</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.42</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.44</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đứng sát tường/thùng cũng không an toàn: đứng ở bên hông rồi bấm Xé để thò tay vào khe, giữ yên khoảng 1s sẽ giật được bảng tên. Bị thò tay thì xoay người lại để chặn</li><li>Hạ 4 đối thủ để mở khóa tuyệt chiêu</li></ol></div></div>
 <div id="setup"><div class="card"><button id="setupX" aria-label="Đóng">✕</button><h2>Cài đặt trận</h2>
 <div class="srow"><span>Số team</span><span class="stp"><button data-s="teams" data-d="-1">−</button><b id="vTeams">2</b><button data-s="teams" data-d="1">+</button></span></div>
@@ -134,6 +134,16 @@ const SFX={
   fail:(t,d)=>{auTone(t,d,"square",180,120,.18,.2,.005);auTone(t+.12,d,"square",140,90,.2,.2,.005)},
   warn:(t,d)=>{auTone(t,d,"triangle",500,700,.15,.45,.01);auTone(t+.18,d,"triangle",500,700,.15,.45,.01)},
   kinCharge:(t,d)=>{auTone(t,d,"sawtooth",300,1500,.1,.4,.01)},
+  jusWind:(t,d)=>{const c=AU.ctx,D=.75,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain(),o=c.createOscillator(),og=c.createGain();
+    s.buffer=AU.nb;s.loop=true;f.type="bandpass";f.Q.value=2.2;f.frequency.setValueAtTime(500,t);f.frequency.exponentialRampToValueAtTime(3200,t+D);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(1.1,t+D*.97);g.gain.linearRampToValueAtTime(0,t+D+.05);
+    o.type="sine";o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(1500,t+D);
+    og.gain.setValueAtTime(.0001,t);og.gain.exponentialRampToValueAtTime(.12,t+D*.97);og.gain.linearRampToValueAtTime(0,t+D+.05);
+    s.connect(f);f.connect(g);g.connect(d);o.connect(og);og.connect(d);s.start(t);o.start(t);s.stop(t+D+.1);o.stop(t+D+.1)}, // gió rít tăng dần lúc rơi
+  jusBoom:(t,d)=>{auTone(t,d,"sine",95,22,.95,1.5,.006);auNoise(t,d,"lowpass",1800,80,1.5,1.1,.012,.8);auNoise(t,d,"lowpass",220,50,2.2,.8,.06,.7);
+    const c=AU.ctx;if(!AU.ir){const n=Math.floor(c.sampleRate*2.6),b=c.createBuffer(2,n,c.sampleRate);for(let h=0;h<2;h++){const a=b.getChannelData(h);for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.5)}AU.ir=b}
+    const cv=c.createConvolver(),wg=c.createGain(),tmp=c.createGain();cv.buffer=AU.ir;wg.gain.value=.9;tmp.connect(cv);cv.connect(wg);wg.connect(d);
+    auTone(t,tmp,"sine",95,22,.95,1,.006);auNoise(t,tmp,"lowpass",1800,80,1.5,.8,.012,.8)}, // tiếng bom vang: thụp trầm + ầm + hồi âm dài như nổ nơi rộng
   lordBurst:(t,d)=>{auTone(t,d,"sine",180,30,.5,1.2,.004);auNoise(t,d,"lowpass",1200,100,.45,1.2,.003,.8)},
   kinBlast:(t,d)=>{auNoise(t,d,"bandpass",3500,200,.5,.9,.003,1);auTone(t,d,"sine",140,35,.45,1,.004);auTone(t,d,"sawtooth",1800,300,.25,.3,.003)},
   reach:(t,d)=>{auNoise(t,d,"bandpass",1800,900,.6,.25,.15,1.5)},
@@ -153,7 +163,7 @@ const SFX={
   lose:(t,d)=>{[392,330,262,196].forEach((f,i)=>auTone(t+i*.25,d,"triangle",f,f,.5,.3))},
   whistle:(t,d)=>{const c=AU.ctx;for(let k=0;k<2;k++){const s=t+k*.4,o=c.createOscillator(),m=c.createOscillator(),mg=c.createGain(),g=c.createGain();o.type="sine";o.frequency.value=2500;m.frequency.value=32;mg.gain.value=120;m.connect(mg);mg.connect(o.frequency);g.gain.setValueAtTime(.0001,s);g.gain.linearRampToValueAtTime(.3,s+.02);g.gain.setValueAtTime(.3,s+.22);g.gain.exponentialRampToValueAtTime(.0001,s+.3);o.connect(g);g.connect(d);o.start(s);m.start(s);o.stop(s+.35);m.stop(s+.35)}}
 };
-const RNG={lordBurst:30,kinCharge:16,kinBlast:32,wind:16,dash:14,punch:16,final:20,shock:20,fail:10,warn:12,tearOut:8,reach:8,tearHit:14,tearMiss:7,dive:10,jump:8,land:9,step:9,fall:10,cloth:5};
+const RNG={jusWind:22,jusBoom:40,lordBurst:30,kinCharge:16,kinBlast:32,wind:16,dash:14,punch:16,final:20,shock:20,fail:10,warn:12,tearOut:8,reach:8,tearHit:14,tearMiss:7,dive:10,jump:8,land:9,step:9,fall:10,cloth:5};
 // play(tên, x, z, tham số, tầm nghe): có x,z thì nhỏ dần theo khoảng cách và lệch trái/phải so với người đang xem; không có x,z là tiếng giao diện (nghe đủ to)
 function play(name,x,z,arg,range){
   const c=AU.ctx;if(!c||!AU.on||c.state!=="running")return;
@@ -327,8 +337,8 @@ function assignKin(){ // người đứng giữa đội hình mỗi team là Kin
     if(L)L.lord=true;
   }
 }
-const LORD_K=1.2,LORD_INV=1000,LORD_NEED=7;
-const ultNeed=a=>a.lord?LORD_NEED:ULT_NEED; // Marshal cần 7 mạng hạ để dùng Công lý, người khác cần 4 cho 18 cú đấm
+const LORD_K=1.2,LORD_INV=1000;
+const ultNeed=a=>ULT_NEED; // đủ 4 mạng hạ: Marshal dùng Công lý, người thường dùng 18 cú đấm
 const FX=[];
 function lordBurst(h,now){ // Marshal bị xé lần đầu: đẩy mạnh mọi người xung quanh (chỉ bị đẩy, không choáng)
   for(const c of agents){
@@ -361,13 +371,13 @@ function kinFire(a,now){
   // tia thường: từ chân tới đỉnh đầu. Tia diệt (đang bay): đáy hạ xuống 0,5 so với mặt đất => dính người đang ngồi (đầu cao 0,69) nhưng người nằm (0,3) thì né được
   const yb=lt?groundY(a.x,a.z)+.5:a.y,yt=a.y+KIN_H,L=kinReach(a,fx,fz,yb);
   for(const c of agents){
-    if(c===a||c.torn||c.out||c.stunBy||(c.ult&&c.ult.st!=="wind"))continue;
+    if(c===a||c.torn||c.out||c.stunBy||(c.ult&&c.ult.st!=="wind"&&!(lt&&jusDying(c))))continue;
     const dx=c.x-a.x,dz=c.z-a.z,s=dx*fx+dz*fz,lat=Math.abs(dx*rx+dz*rz);
     if(s<-.3||s>L+.3||lat>KIN_HIT||c.y>yt+.3||headTop(c)<yb)continue;
     const ally=c.team===a.team;
     PEND.push({t:now+Math.max(0,s)/KIN_BEAM_V*1000,f:()=>{ // tia chạm tới đâu thì người ở đó văng/ngã trước
       if(c.torn||c.out)return;
-      if(lt){const k=a.kills,ch=a.charge;killAgent(a,c,performance.now(),false);if(ally){a.kills=k;a.charge=ch}} // bắn trúng đồng đội: không được tính điểm
+      if(lt){if(jusDying(c))jusRelease(c,performance.now(),fx,fz);const k=a.kills,ch=a.charge;killAgent(a,c,performance.now(),false);if(ally){a.kills=k;a.charge=ch}} // bắn trúng đồng đội: không được tính điểm
       else if(c.lord){c.kv=[fx*KIN_V*.7,fz*KIN_V*.7];play("fall",c.x,c.z)} // Marshal không ngã, chỉ bị đẩy lùi
       else knockDown(c,performance.now(),fx,fz);
     }});
@@ -394,7 +404,7 @@ function kinTick(a,now){ // trả về true khi nhân vật đang phải đứng
 function kinVisuals(now){
   for(const a of agents){const u=a.g&&a.g.userData;if(!u||!u.starO)continue;
     const on=!!a.lord&&!a.out;u.starO.visible=u.starI.visible=on;
-    if(on){const rdy=a.charge>=LORD_NEED;u.starO.material.color.set(rdy&&Math.sin(now/110)>0?0xffe27a:0xff8a00);u.starO.scale.setScalar(rdy?1.12+.08*Math.sin(now/110):1)}} // đủ 7 mạng hạ: viền sao phát sáng
+    if(on){const rdy=a.charge>=ultNeed(a);u.starO.material.color.set(rdy&&Math.sin(now/110)>0?0xffe27a:0xff8a00);u.starO.scale.setScalar(rdy?1.12+.08*Math.sin(now/110):1)}} // đủ 4 mạng hạ: viền sao phát sáng
   for(let i=FX.length-1;i>=0;i--){const f=FX[i],e=(now-f.t0)/500;if(e>=1){scene.remove(f.m);FX.splice(i,1);continue}f.m.scale.setScalar(1+e*11);f.m.material.opacity=.8*(1-e)}
   for(let i=0;i<PEND.length;i++)if(now>=PEND[i].t){const p=PEND.splice(i,1)[0];i--;p.f()}
   for(let i=BEAMS.length-1;i>=0;i--){
@@ -420,7 +430,7 @@ function respawn(a,first){
   const ti=training?agents.indexOf(a):-1,tp=training&&TP[ti]?TP[ti]:null,p=tp||(first?SP[a.team][a.idx]:randPos(a));
   if(training&&((trMar===1&&a.isMe)||(trMar===2&&a===agents[6]))){a.lord=true;a.lh=0;a.inv=0} // tập luyện: Marshal hồi sinh vẫn là Marshal
   a.g.scale.setScalar(.7*(a.lord?LORD_K:1));a.x=p[0];a.z=p[1];a.y=groundY(a.x,a.z);a.vy=0;a.ry=tp?(a.isMe?0:Math.PI):Math.atan2(a.x,a.z);a.hd=a.ry;
-  a.crouch=false;a.prone=false;a.noisy=false;a.supine=false;a.proneEnd=0;a.torn=0;a.tearAt=0;a.proneDur=0;a.dvOn=false;a.dvEnd=0;a.iv=[0,0];a.spd=0;a.out=false;a.g.visible=true;
+  a.crouch=false;a.prone=false;a.noisy=false;a.supine=false;a.proneEnd=0;a.torn=0;a.tearAt=0;a.grab=false;a.tearK=1;a.proneDur=0;a.dvOn=false;a.dvEnd=0;a.iv=[0,0];a.spd=0;a.out=false;a.g.visible=true;
   a.ult=null;a.fin=null;a.rc=null;a.alertBy=null;a.pc=false;a.stp=undefined;a.stunBy=null;a.kv=[0,0];a.fv=[0,0];a.flyEnd=0;a.lie=false;a.hideAt=0;a.kb=null;a.tum=null;a.g.userData.pv.position.z=0;a.kNext=a.kin?performance.now()+KIN_EVERY:0; // charge giữ nguyên qua các lần hồi sinh (chỉ mất khi bị hạ lúc đã đủ 5)
   if(a.isMe)crBtn.classList.remove("on");
   a.g.position.set(a.x,a.y,a.z);a.g.rotation.y=a.ry;
@@ -476,13 +486,14 @@ const DIVE_V=3.825,DIVE_T=500,AIR_K=.85; // AIR_K: trên không đi chậm còn 
 function tryTear(a,now,mv,bot){
   if(a.prone||a.torn||a.ult||a.rc||a.stunBy||a.kb||kinLethal(a)||now<a.tearCd)return; // Kinetikeer kẻ hủy diệt không xé được
   // đủ 5 charge: nút Xé (người chơi) luôn thành tuyệt chiêu khi đang đứng trên nền. Bot tự quyết định dùng chiêu ở botInput
+  if(a.lord&&a.charge>=ultNeed(a)&&a.y<=groundY(a.x,a.z)+.01){startGrab(a,now);return} // Marshal đủ mạng hạ: nút xé thành đòn chộp của Công lý (hụt thì chộp lại được)
   if(!bot&&!a.kin&&a.charge>=ultNeed(a)&&a.y<=groundY(a.x,a.z)+.01){startUlt(a,now);return}
   // không có ai xé được từ sau lưng mà có người dựa lưng vào vật cản ở bên hông: thò tay vào khe (cần đứng yên SIDE_T)
   if(!bot&&a.y<=groundY(a.x,a.z)+.01&&!agents.some(t=>t.team!==a.team&&!t.torn&&!t.out&&!t.supine&&tearReach(a,t))){
     let best=null,bd=9;for(const t of agents)if(reachValid(a,t)){const d=Math.hypot(a.x-t.x,a.z-t.z);if(d<bd){bd=d;best=t}}
     if(best){startReach(a,best,now);return}
   }
-  mv=mv||0;a.tearT=now;a.tearCd=now+500;a.tearAir=a.y>groundY(a.x,a.z)+.08;a.tearAt=now+250;
+  mv=mv||0;a.grab=false;a.tearK=1;a.tearT=now;a.tearCd=now+500;a.tearAir=a.y>groundY(a.x,a.z)+.08;a.tearAt=now+250;
   a.tearMv=a.tearAir?(a.jmv||mv):0;a.dive=a.tearMv>0;if(a.dive){a.dvEnd=now+DIVE_T;a.dvOn=true;a.dvChk=now+150;a.tearAt=0;a.tearCd=now+3000}
   play(a.dive?"dive":"tearOut",a.x,a.z);
 }
@@ -508,7 +519,7 @@ function resolveTear(a,now){
 // hạ một người: mất 1 mạng chung của team (hết mạng thì bị loại), cộng điểm, tính charge tuyệt chiêu
 function killAgent(a,hit,now,viaUlt){
   const hNeed=ultNeed(hit),wasMarshal=!!hit.lord;
-  if(hit.lord&&!viaUlt&&!hit.lh){hit.lh=1;hit.inv=now+LORD_INV;lordBurst(hit,now);return} // Marshal chịu được lần xé đầu: không mất mạng, bất tử ngắn
+  if(hit.lord&&!viaUlt&&!hit.lh){hit.lh=1;hit.charge=0;hit.inv=now+LORD_INV;lordBurst(hit,now);return} // Marshal chịu được lần xé đầu: không mất mạng team, bất tử ngắn, nhưng mất các mạng hạ đã tích
   if(hit.lord)hit.lord=false; // chết rồi thì hồi sinh thành nhân vật thường
   hit.tum=null;a.kills++;hit.deaths++;hit.tearAt=0;hit.dvOn=false;hit.ult=null;hit.rc=null;hit.g.userData.board.visible=false;
   if(hit.charge>=hNeed||wasMarshal)hit.charge=0; // Marshal chết thì các mạng hạ đã tích không chuyển sang mạng sau (nhân vật thường)
@@ -543,14 +554,43 @@ function ultTarget(a){
   }
   return best;
 }
-// Công lý (Marshal, 7 mạng hạ): chộp đối thủ trước mặt, nhảy lên cao, xoay đầu đối thủ chúc xuống rồi đáp mạnh. Mọi người khác bị hất tung rồi nằm 1,5s; hai người nảy lên chút, đối thủ chết ngay
-const JUS_H=8,JUS_RISE=850,JUS_HANG=150,JUS_SLAM=260,JUS_R=12;
+// Công lý (Marshal, 4 mạng hạ): nút xé = chộp nhanh (tầm như xé thường); trúng thì bất tử từ lúc bắt tới lúc chạm đất. Chộp đối thủ trước mặt, nhảy lên cao, xoay đầu đối thủ chúc xuống rồi đáp mạnh. Mọi người khác bị hất tung rồi nằm 1,5s; hai người nảy lên chút, đối thủ chết ngay
+const JUS_H=10,JUS_RISE=850,JUS_HANG=150,JUS_SLAM=600,JUS_R=12,GRAB_R=1.6;
+function jusTarget(a,R,now){ // đối thủ trước mặt trong tầm chộp (kể cả đang ngồi hoặc nằm)
+  const fx=-Math.sin(a.ry),fz=-Math.cos(a.ry);let best=null,bd=1e9;
+  for(const t of agents){
+    if(t.team===a.team||t.torn||t.out||t.stunBy||t.inv>now||(t.ult&&t.ult.st!=="wind")||Math.abs(t.y-a.y)>.7)continue;
+    const dx=t.x-a.x,dz=t.z-a.z,d=Math.hypot(dx,dz);
+    if(d>R||(d>.01&&(dx*fx+dz*fz)/d<.3))continue;
+    const top=Math.max(a.y,t.y)+.05;
+    if(boxes.some(b=>b.top>top&&segHits(a.x,a.z,t.x,t.z,b,.3)))continue;
+    if(d<bd){bd=d;best=t}
+  }
+  return best;
+}
+function startGrab(a,now){ // tay đưa ra nhanh (125ms) rồi kiểm tra; trượt thì 0,3s sau chộp lại
+  a.grab=true;a.tearK=2;a.tearT=now;a.tearCd=now+450;a.tearAir=false;a.tearAt=now+125;a.tearMv=0;a.dive=false;play("tearOut",a.x,a.z);
+}
+function resolveGrab(a,now){
+  const t=a.lord&&a.charge>=ultNeed(a)?jusTarget(a,GRAB_R,now):null;
+  if(!t)return false;
+  a.crouch=false;a.dvOn=false;a.rc=null;
+  a.ult={st:"jus",t0:now,tg:t,n:0,played:0,kind:"jus",el:0,flip:0,wp:0};
+  t.stunBy=a;t.tearAt=0;t.dvOn=false;standUp(t);t.kv=[0,0];
+  play("tearHit",t.x,t.z);play("dash",a.x,a.z);
+  return true;
+}
+const jusDying=c=>c.lord&&c.lh&&c.ult&&c.ult.kind==="jus"&&c.ult.st==="jus"; // Marshal còn 1 mạng đang bay: Tia hủy diệt vẫn hạ được
+function jusRelease(m,now,fx,fz){ // Marshal bị hạ giữa chừng: nạn nhân rơi xuống ngã 1s và còn sống
+  const U=m.ult,v=U&&U.tg;m.ult=null;
+  if(v){v.stunBy=null;knockDown(v,now,fx,fz);v.proneDur=1000;v.tum=null;v.kv=[0,0];v.vy=0}
+}
 function justiceTick(a,t,U,now,dt){
   U.el+=dt*1000;const el=U.el,fx=-Math.sin(a.ry),fz=-Math.cos(a.ry),gy=groundY(a.x,a.z);
   let h;
   if(el<JUS_RISE){const e=el/JUS_RISE;h=JUS_H*(1-(1-e)*(1-e))}
   else if(el<JUS_RISE+JUS_HANG)h=JUS_H;
-  else{const e=Math.min(1,(el-JUS_RISE-JUS_HANG)/JUS_SLAM);h=JUS_H*(1-e*e)}
+  else{if(!U.wp){U.wp=1;play("jusWind",a.x,a.z,0,22)}const e=Math.min(1,(el-JUS_RISE-JUS_HANG)/JUS_SLAM);h=JUS_H*(1-e*e)}
   U.flip=Math.PI*Math.min(1,el/(JUS_RISE*.8)); // đầu đối thủ dần chúc xuống
   a.y=gy+h;a.vy=0;
   t.x=a.x+fx*.9;t.z=a.z+fz*.9;t.y=a.y+.1;t.vy=0;t.kv=[0,0];standUp(t);
@@ -564,7 +604,7 @@ function justiceTick(a,t,U,now,dt){
   }
   const m=new THREE.Mesh(new THREE.RingGeometry(.4,.6,36),new THREE.MeshBasicMaterial({color:0xffc400,transparent:true,opacity:.9,depthWrite:false}));
   m.rotation.x=-Math.PI/2;m.position.set(a.x,a.y+.1,a.z);scene.add(m);FX.push({m,t0:now});
-  play("shock",a.x,a.z);play("final",t.x,t.z);play("lordBurst",a.x,a.z,0,30);
+  play("jusBoom",a.x,a.z,0,40);
   killAgent(a,t,now,true);
   t.kv=[0,0];t.vy=4;t.flyEnd=now+500;t.lie=true;a.fin={t,until:now+2000};
   return null;
@@ -830,7 +870,7 @@ function think(a,A,now){
       }
     }
     if(!A.climb){
-      if(t.prone){const g=proneGoal(a,t,px,pz);A.gx=g[0];A.gz=g[1]}
+      if(t.prone&&!t.supine){const g=proneGoal(a,t,px,pz);A.gx=g[0];A.gz=g[1]}
       else if(front&&d>2.5&&sn){const sd=(dxa*Math.cos(t.ry)-dza*Math.sin(t.ry))>=0?1:-1;A.gx=px+Math.cos(t.ry)*sd*3.2+bx;A.gz=pz-Math.sin(t.ry)*sd*3.2+bz}
       else{A.gx=px+bx;A.gz=pz+bz}
       if(!t.prone&&sn&&d<8&&front){if(A.sneakTg!==t||now>A.sneakExp){A.sneakMode=Math.random()<.5;A.sneakTg=t} A.sneakExp=now+4000;if(A.sneakMode){A.sneak=true;A.sneakT=now+1200}} // tiến lại từ phía trước: tung đồng xu 1 lần mỗi lượt tiếp cận, 50% đi khom / 50% chạy thườngelse if(!t.prone&&wasSneak&&now<A.sneakT)A.sneak=true;
@@ -869,7 +909,7 @@ function kinBot(a,A,now){
   let e=null,ed=1e9,ex=0,ez=0;const known=new Map();
   for(const[t,m]of A.mem){if(t.torn||t.out)continue;const sn=canSee(a,t)||canHear(a,t),px=sn?t.x:m.x,pz=sn?t.z:m.z,d=Math.hypot(px-a.x,pz-a.z);known.set(t,{x:px,z:pz});if(d<ed){ed=d;e=t;ex=px;ez=pz}}
   if(!e)return null; // chưa biết địch nào: đi tuần như bot thường
-  if(e.prone&&ed<9)return null; // địch đang nằm gần (bị tia đánh ngã): cứ để logic thường đi xé
+  if(e.prone&&!e.supine&&ed<9)return null; // địch đang nằm gần (bị tia đánh ngã): cứ để logic thường đi xé
   a.crouch=false;a.boost=1;
   if(!a.kb&&ed>=2&&ed<6&&a.y<.5){
     let near=0;for(const[t,m]of known)if(Math.hypot(m.x-a.x,m.z-a.z)<6)near++;
@@ -935,7 +975,8 @@ function botInput(a,dt,now){
   const inp={mv:0,turn:0,jump:false};
   // đủ 5 charge: có địch phía trước trong tầm thì tung 18 cú đấm
   if(!a.kin&&a.charge>=ultNeed(a)&&!a.prone&&now>=a.tearCd&&a.y<=groundY(a.x,a.z)+.01){
-    const ut=ultTarget(a);if(ut&&Math.hypot(ut.x-a.x,ut.z-a.z)<4.5){startUlt(a,now);return inp}
+    if(a.lord){if(jusTarget(a,GRAB_R-.2,now)){startGrab(a,now);return inp}}
+    else{const ut=ultTarget(a);if(ut&&Math.hypot(ut.x-a.x,ut.z-a.z)<4.5){startUlt(a,now);return inp}}
   }
   if(a.kin){const kr=kinBot(a,A,now);if(kr)return kr}
   // đấu tay đôi bế tắc (hai bên xoay vòng quanh nhau): sau ~1,5s ở sát nhau mà không ai ra sau lưng được thì tung đồng xu, 50% lùi ra ~1s rồi tiếp cận lại
@@ -976,8 +1017,8 @@ function botInput(a,dt,now){
     const dx=a.x-t.x,dz=a.z-t.z,d=Math.hypot(dx,dz)||1;
     // đã ở sau lưng và gần: không dò đường nữa, đón đầu thẳng vào lưng mục tiêu (kể cả khi nó đang chạy)
     const dvg=A.dvAt||now<(a.dvEnd||0);
-    if(seenNow&&!A.climb&&(dvg||(a.y<.5&&Math.abs(a.y-t.y)<.7))&&d<7&&(t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.25)){
-      const lead=Math.min(.45,d/5),pg=t.prone?proneGoal(a,t,t.x,t.z):null,cx=pg?pg[0]:t.x+t.iv[0]*lead+Math.sin(t.ry)*.4,cz=pg?pg[1]:t.z+t.iv[1]*lead+Math.cos(t.ry)*.4;
+    if(seenNow&&!A.climb&&(dvg||(a.y<.5&&Math.abs(a.y-t.y)<.7))&&d<7&&((t.prone&&!t.supine)||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.25)){
+      const lead=Math.min(.45,d/5),pg=t.prone&&!t.supine?proneGoal(a,t,t.x,t.z):null,cx=pg?pg[0]:t.x+t.iv[0]*lead+Math.sin(t.ry)*.4,cz=pg?pg[1]:t.z+t.iv[1]*lead+Math.cos(t.ry)*.4;
       if(clearSeg(a.x,a.z,cx,cz)){chase=[cx,cz];cPr=!!pg;A.sneak=false}
     }
   }
@@ -993,7 +1034,7 @@ function botInput(a,dt,now){
   if(t&&!t.torn&&A.mem.has(t)){
     const fs=fitOk(a,t,false),fc=fitOk(a,t,true),d=Math.hypot(a.x-t.x,a.z-t.z);
     // xé khi dự đoán tay sẽ chạm bảng tên sau 0.25s: không cần dừng lại, cứ vừa chạy vừa xé
-    if(d<2.4&&(fs||fc)&&tearReach(a,t)){
+    if(d<2.4&&!t.supine&&(fs||fc)&&tearReach(a,t)){
       a.crouch=!fs;
       if(!A.tw)A.tw=now+A.tdel;
       if(now>=A.tw&&now>=a.tearCd){tryTear(a,now,0,true);A.tw=0}
@@ -1082,7 +1123,7 @@ function step(a,inp,dt,now){
   // đang ngồi mà bước khỏi mép thùng xuống chỗ thấp thì té (tới = sấp, lùi = ngửa)
   if(onG&&!a.prone)a.lastG=gy;else if(!onG&&a.crouch&&!a.prone&&a.y<a.lastG-.12){a.prone=true;a.noisy=true;a.proneEnd=0;a.supine=a.lastMv<0;setTimeout(()=>play("fall",a.x,a.z),260)}
   if(a.prone){if(onG&&!a.proneEnd)a.proneEnd=now+(a.proneDur||1000);if(a.proneEnd&&now>a.proneEnd){a.prone=false;a.noisy=false;a.proneEnd=0;a.proneDur=0;a.supine=false;a.crouch=false;if(a.isMe)crBtn.classList.remove("on")}}
-  if(a.tearAt&&now>=a.tearAt){a.tearAt=0;if(!resolveTear(a,now))play("tearMiss",a.x,a.z)}
+  if(a.tearAt&&now>=a.tearAt){a.tearAt=0;if(a.grab){a.grab=false;if(!resolveGrab(a,now)){play("tearMiss",a.x,a.z);a.tearCd=now+300}}else if(!resolveTear(a,now))play("tearMiss",a.x,a.z)}
   if(a.dvOn&&now>=a.dvChk){
     if(resolveTear(a,now)){a.dvOn=false;a.tearCd=now+500}
     else if(onG){a.dvOn=false;a.tearCd=now+500;a.prone=true;a.noisy=true;a.proneEnd=0;a.supine=false;a.proneDur=1300;play("fall",a.x,a.z)} // xé hụt khi lao: té nằm 1,3s
@@ -1095,7 +1136,7 @@ function step(a,inp,dt,now){
   }
   a.g.position.set(a.x,a.y,a.z);a.g.rotation.y=a.ry;
   if(a.stunBy){a.g.position.x+=(Math.random()-.5)*.1;a.g.position.z+=(Math.random()-.5)*.1} // rung lên khi bị đấm
-  const tp=now-a.tearT,te=a.rc?Math.min(1,(now-a.rc.t0)/300):a.dvOn?Math.min(1,tp/150):tp<0?0:tp<250?tp/250:tp<450?1-(tp-250)/200:0,ta=te*te*(3-2*te);
+  const tp=(now-a.tearT)*(a.tearK||1),te=a.rc?Math.min(1,(now-a.rc.t0)/300):a.dvOn?Math.min(1,tp/150):tp<0?0:tp<250?tp/250:tp<450?1-(tp-250)/200:0,ta=te*te*(3-2*te);
   const U=a.ult,pun=U?(U.st==="punch"?U.n:-1):undefined;
   animate(a.g,a.spd,a.y>gy+.08,U&&U.st==="wind"?.55:(a.rc&&!a.crouch?.3:a.crouch),dt,now/1000,a.prone?(a.supine?-1:1):0,ta,a.dive&&a.dvOn&&a.y>gy+.05,pun);
   { // lộn người trên không khi bị Kinetikeer đánh trúng: xoay quanh giữa thân, kết thúc đúng tư thế nằm
