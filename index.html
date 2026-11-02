@@ -79,7 +79,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trKin">⚡ Kinetikeer: TẮT</button><button id="trMar">⚖️ Marshal: TẮT</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.44</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.47</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đứng sát tường/thùng cũng không an toàn: đứng ở bên hông rồi bấm Xé để thò tay vào khe, giữ yên khoảng 1s sẽ giật được bảng tên. Bị thò tay thì xoay người lại để chặn</li><li>Hạ 4 đối thủ để mở khóa tuyệt chiêu</li></ol></div></div>
 <div id="setup"><div class="card"><button id="setupX" aria-label="Đóng">✕</button><h2>Cài đặt trận</h2>
 <div class="srow"><span>Số team</span><span class="stp"><button data-s="teams" data-d="-1">−</button><b id="vTeams">2</b><button data-s="teams" data-d="1">+</button></span></div>
@@ -489,7 +489,7 @@ function tryTear(a,now,mv,bot){
   if(a.lord&&a.charge>=ultNeed(a)&&a.y<=groundY(a.x,a.z)+.01){startGrab(a,now);return} // Marshal đủ mạng hạ: nút xé thành đòn chộp của Công lý (hụt thì chộp lại được)
   if(!bot&&!a.kin&&a.charge>=ultNeed(a)&&a.y<=groundY(a.x,a.z)+.01){startUlt(a,now);return}
   // không có ai xé được từ sau lưng mà có người dựa lưng vào vật cản ở bên hông: thò tay vào khe (cần đứng yên SIDE_T)
-  if(!bot&&a.y<=groundY(a.x,a.z)+.01&&!agents.some(t=>t.team!==a.team&&!t.torn&&!t.out&&!t.supine&&tearReach(a,t))){
+  if(!bot&&a.y<=groundY(a.x,a.z)+.01&&!agents.some(t=>t.team!==a.team&&!t.torn&&!t.out&&!t.supine&&!(a.lord&&t.prone)&&tearReach(a,t))){
     let best=null,bd=9;for(const t of agents)if(reachValid(a,t)){const d=Math.hypot(a.x-t.x,a.z-t.z);if(d<bd){bd=d;best=t}}
     if(best){startReach(a,best,now);return}
   }
@@ -506,7 +506,7 @@ function resolveTear(a,now){
   if(a.lord){hx=a.x+(hx-a.x)/LORD_K;hz=a.z+(hz-a.z)/LORD_K;hy=a.y+(hy-a.y)/LORD_K} // tầm tay Marshal giữ nguyên dù thân to hơn
   let hit=null;
   for(const t of agents){
-    if(t.team===a.team||t.torn||t.supine||t.stunBy||t.inv>now||(t.ult&&t.ult.st!=="wind"))continue; // đang bị đấm / đang lướt-đấm thì bất tử, chỉ thủ thế là còn sơ hở
+    if(t.team===a.team||t.torn||t.supine||(a.lord&&t.prone)||t.stunBy||t.inv>now||(t.ult&&t.ult.st!=="wind"))continue; // Marshal không xé được người đang nằm (không ngồi được nên không với tới); đang bị đấm / đang lướt-đấm thì bất tử, chỉ thủ thế là còn sơ hở
     t.g.updateMatrixWorld(true);t.g.userData.board.getWorldPosition(V1);
     const h=Math.hypot(hx-V1.x,hz-V1.z),dy=V1.y-hy
     const dx=a.x-t.x,dz=a.z-t.z,dist=Math.hypot(dx,dz)||.001;
@@ -760,8 +760,9 @@ const SIDE_T=1000,SIDE_D=1.0,SIDE_COS_MIN=-.4; // thời gian thò tay (ms); kho
 const insideObs=(x,z,y)=>boxes.some(b=>y<b.top-.05&&Math.abs(x-b.x)<=b.hw&&Math.abs(z-b.z)<=b.hd);
 const backCovered=t=>insideObs(t.x+Math.sin(t.ry)*.55,t.z+Math.cos(t.ry)*.55,t.y); // lưng cách vật cản dưới ~0,5
 function reachValid(a,t){
-  if(!t||t.team===a.team||t.torn||t.out||t.prone||t.supine||t.stunBy||(t.ult&&t.ult.st!=="wind"))return false;
+  if(!t||t.team===a.team||t.torn||t.out||t.supine||(t.prone&&!a.lord)||t.stunBy||(t.ult&&t.ult.st!=="wind"))return false;
   if(a.prone||a.torn||a.ult||a.stunBy||a.y>groundY(a.x,a.z)+.05||Math.abs(a.y-t.y)>.7)return false;
+  if(t.prone){const bx=t.x-Math.sin(t.ry)*PRONE_BD,bz=t.z-Math.cos(t.ry)*PRONE_BD;return Math.hypot(a.x-bx,a.z-bz)<=1.1} // Marshal cúi xuống giật bảng tên người nằm sấp: đứng gần bảng tên và giữ SIDE_T
   if(Math.hypot(t.iv[0],t.iv[1])>=2||!backCovered(t))return false; // mục tiêu phải đứng gần yên và lưng sát vật cản
   const dx=a.x-t.x,dz=a.z-t.z,d=Math.hypot(dx,dz);
   if(d>SIDE_D||d<.01)return false;
@@ -825,8 +826,8 @@ function segHits(x1,z1,x2,z2,b,m=0){
 const headTop=t=>t.y+(t.prone?.3:t.crouch?.69:1.43)*(t.lord?LORD_K:1);
 function canSee(a,t){
   const dx=t.x-a.x,dz=t.z-a.z,d=Math.hypot(dx,dz);
-  if(d>(a.kin?30:19))return false; // Kinetikeer nhìn xa hơn và rộng hơn (±80°)
-  if(d>.01&&(dx*-Math.sin(a.ry)+dz*-Math.cos(a.ry))/d<(a.kin?.17:.5))return false;
+  if(d>(a.kin?30:19))return false; // Kinetikeer nhìn xa hơn (30); Kinetikeer và Marshal nhìn rộng hơn (±80°)
+  if(d>.01&&(dx*-Math.sin(a.ry)+dz*-Math.cos(a.ry))/d<(a.kin||a.lord?.17:.5))return false;
   const ht=headTop(t);
   for(const b of boxes)if(b.top>ht&&a.y<b.top-.05&&t.y<b.top-.05&&segHits(a.x,a.z,t.x,t.z,b))return false;
   return true;
@@ -1030,11 +1031,12 @@ function botInput(a,dt,now){
     }
     if(cov&&now>=a.tearCd&&reachValid(a,t)&&!reachThreat(a,t,now)){startReach(a,t,now);return inp}
   }
+  if(a.lord&&t&&!t.torn&&A.mem.has(t)&&t.prone&&!t.supine&&now>=a.tearCd&&reachValid(a,t)&&!reachThreat(a,t,now)){startReach(a,t,now);return inp} // bot Marshal: cúi xuống giật bảng tên người nằm sấp
   a.crouch=A.sneak;a.boost=chase?BOT_BOOST:1;
   if(t&&!t.torn&&A.mem.has(t)){
     const fs=fitOk(a,t,false),fc=fitOk(a,t,true),d=Math.hypot(a.x-t.x,a.z-t.z);
     // xé khi dự đoán tay sẽ chạm bảng tên sau 0.25s: không cần dừng lại, cứ vừa chạy vừa xé
-    if(d<2.4&&!t.supine&&(fs||fc)&&tearReach(a,t)){
+    if(d<2.4&&!t.supine&&!(a.lord&&t.prone)&&(fs||fc)&&tearReach(a,t)){
       a.crouch=!fs;
       if(!A.tw)A.tw=now+A.tdel;
       if(now>=A.tw&&now>=a.tearCd){tryTear(a,now,0,true);A.tw=0}
