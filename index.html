@@ -20,7 +20,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #acts{right:calc(42px + env(safe-area-inset-right,0px));grid-template-columns:84px 84px;grid-template-rows:84px 84px}
 .b{border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.45);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px;touch-action:none}
 .b.on{background:rgba(255,255,255,.5)}
-#trainUI{display:none;position:absolute;top:calc(56px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));gap:6px;z-index:6}
+#trainUI{flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 24px);display:none;position:absolute;top:calc(56px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));gap:6px;z-index:6}
 #trainUI button{padding:7px 11px;border-radius:10px;border:2px solid rgba(255,255,255,.45);background:rgba(0,0,0,.5);color:#fff;font-size:12px;font-family:inherit}
 #reach{display:none;position:absolute;top:24%;left:50%;transform:translateX(-50%);min-width:160px;text-align:center;color:#fff;font-size:13px;font-weight:600;text-shadow:0 1px 3px #000;pointer-events:none;z-index:4}
 #reach div{margin-top:4px;height:8px;border:2px solid rgba(255,255,255,.8);border-radius:6px;background:rgba(0,0,0,.45);overflow:hidden}
@@ -76,10 +76,10 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="app"><button class="b" id="flip">⟲</button><div id="toast"></div><div id="hud"></div>
 <div id="reach"><span id="reachT"></span><div><i id="reachI"></i></div></div>
 <button id="sndBtn" aria-label="Bật/tắt âm thanh"></button><button id="exitBtn">✕ Thoát</button><div id="confirm"><div class="card"><p>Thoát trận và về menu?</p><button id="exitYes">Thoát</button><button id="exitNo">Tiếp tục</button></div></div>
-<div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trKin">⚡ Kinetikeer: TẮT</button><button id="trExit">✕ Thoát</button></div>
+<div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trKin">⚡ Kinetikeer: TẮT</button><button id="trMar">⚖️ Marshal: TẮT</button><button id="trExit">✕ Thoát</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.41</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.42</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đứng sát tường/thùng cũng không an toàn: đứng ở bên hông rồi bấm Xé để thò tay vào khe, giữ yên khoảng 1s sẽ giật được bảng tên. Bị thò tay thì xoay người lại để chặn</li><li>Hạ 4 đối thủ để mở khóa tuyệt chiêu</li></ol></div></div>
 <div id="setup"><div class="card"><button id="setupX" aria-label="Đóng">✕</button><h2>Cài đặt trận</h2>
 <div class="srow"><span>Số team</span><span class="stp"><button data-s="teams" data-d="-1">−</button><b id="vTeams">2</b><button data-s="teams" data-d="1">+</button></span></div>
@@ -237,7 +237,7 @@ function makeChar(col,nm){
   glow.position.set(0,.42,.183);glow.visible=false;up.add(glow);
   const mkStar=(ro,ri,col,z)=>{const sh=new THREE.Shape();for(let i=0;i<10;i++){const r=i%2?ri:ro,an=Math.PI/2+i*Math.PI/5,x=Math.cos(an)*r,y=Math.sin(an)*r;if(i)sh.lineTo(x,y);else sh.moveTo(x,y)}sh.closePath();
     const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({color:col,side:2,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));m.position.set(0,.33,z);m.visible=false;up.add(m);return m};
-  const starO=mkStar(.36,.15,0xff8a00,.184),starI=mkStar(.29,.12,0x2b2b2b,.186); // Marshal: sao 5 cánh viền cam sau lưng // viền sáng quanh bảng tên khi đủ 5 charge
+  const starO=mkStar(.36,.15,0xff8a00,-.184),starI=mkStar(.29,.12,0x2b2b2b,-.186); // Marshal: sao 5 cánh viền cam ở ngực (phía trước) // viền sáng quanh bảng tên khi đủ 5 charge
   g.userData={cr:0,w:0,ph:0,a:0,pr:0,dv:0,up,pv,board,glow,starO,starI,M,c,tex,legs:[LL,LR],arms:[AL,AR]};
   setBoard(g,nm);
   g.scale.setScalar(.7);scene.add(g);return g;
@@ -418,6 +418,7 @@ function respawn(a,first){
   if(!a.g)a.g=makeChar(TEAMS[a.team][1],a.name);
   else{setBoard(a.g,a.name);Object.assign(a.g.userData,{cr:0,w:0,ph:0,a:0,pr:0,dv:0,pu:0,pp:0});a.g.userData.up.rotation.y=0;a.g.userData.board.visible=true}
   const ti=training?agents.indexOf(a):-1,tp=training&&TP[ti]?TP[ti]:null,p=tp||(first?SP[a.team][a.idx]:randPos(a));
+  if(training&&((trMar===1&&a.isMe)||(trMar===2&&a===agents[6]))){a.lord=true;a.lh=0;a.inv=0} // tập luyện: Marshal hồi sinh vẫn là Marshal
   a.g.scale.setScalar(.7*(a.lord?LORD_K:1));a.x=p[0];a.z=p[1];a.y=groundY(a.x,a.z);a.vy=0;a.ry=tp?(a.isMe?0:Math.PI):Math.atan2(a.x,a.z);a.hd=a.ry;
   a.crouch=false;a.prone=false;a.noisy=false;a.supine=false;a.proneEnd=0;a.torn=0;a.tearAt=0;a.proneDur=0;a.dvOn=false;a.dvEnd=0;a.iv=[0,0];a.spd=0;a.out=false;a.g.visible=true;
   a.ult=null;a.fin=null;a.rc=null;a.alertBy=null;a.pc=false;a.stp=undefined;a.stunBy=null;a.kv=[0,0];a.fv=[0,0];a.flyEnd=0;a.lie=false;a.hideAt=0;a.kb=null;a.tum=null;a.g.userData.pv.position.z=0;a.kNext=a.kin?performance.now()+KIN_EVERY:0; // charge giữ nguyên qua các lần hồi sinh (chỉ mất khi bị hạ lúc đã đủ 5)
@@ -506,11 +507,12 @@ function resolveTear(a,now){
 }
 // hạ một người: mất 1 mạng chung của team (hết mạng thì bị loại), cộng điểm, tính charge tuyệt chiêu
 function killAgent(a,hit,now,viaUlt){
-  const hNeed=ultNeed(hit);
+  const hNeed=ultNeed(hit),wasMarshal=!!hit.lord;
   if(hit.lord&&!viaUlt&&!hit.lh){hit.lh=1;hit.inv=now+LORD_INV;lordBurst(hit,now);return} // Marshal chịu được lần xé đầu: không mất mạng, bất tử ngắn
   if(hit.lord)hit.lord=false; // chết rồi thì hồi sinh thành nhân vật thường
   hit.tum=null;a.kills++;hit.deaths++;hit.tearAt=0;hit.dvOn=false;hit.ult=null;hit.rc=null;hit.g.userData.board.visible=false;
-  if(hit.charge>=hNeed)hit.charge=0; // đã đủ 4 mà bị hạ thì mất chiêu; chưa đủ thì giữ nguyên
+  if(hit.charge>=hNeed||wasMarshal)hit.charge=0; // Marshal chết thì các mạng hạ đã tích không chuyển sang mạng sau (nhân vật thường)
+   // đã đủ 4 mà bị hạ thì mất chiêu; chưa đủ thì giữ nguyên
   let ready=false;
   if(viaUlt)a.charge=0;else if(a.charge<ultNeed(a)){a.charge++;ready=a.charge===ultNeed(a)}
   if(TS[hit.team]>0){TS[hit.team]--;hit.torn=now+3000}
@@ -542,7 +544,7 @@ function ultTarget(a){
   return best;
 }
 // Công lý (Marshal, 7 mạng hạ): chộp đối thủ trước mặt, nhảy lên cao, xoay đầu đối thủ chúc xuống rồi đáp mạnh. Mọi người khác bị hất tung rồi nằm 1,5s; hai người nảy lên chút, đối thủ chết ngay
-const JUS_H=5,JUS_RISE=700,JUS_HANG=150,JUS_SLAM=260,JUS_R=12;
+const JUS_H=8,JUS_RISE=850,JUS_HANG=150,JUS_SLAM=260,JUS_R=12;
 function justiceTick(a,t,U,now,dt){
   U.el+=dt*1000;const el=U.el,fx=-Math.sin(a.ry),fz=-Math.cos(a.ry),gy=groundY(a.x,a.z);
   let h;
@@ -1112,7 +1114,8 @@ const K={};
 document.querySelectorAll(".b[data-k]").forEach(el=>{
   const k=el.dataset.k;
   const dn=e=>{e.preventDefault();el.setPointerCapture?.(e.pointerId);
-    if(k==="crouch"){if(!me.prone&&!me.torn&&!me.ult&&!me.stunBy&&!kinLethal(me)&&!me.lord){me.rc=null;me.crouch=!me.crouch;el.classList.toggle("on",me.crouch)}}
+    if(k==="crouch"){if(!me.prone&&!me.torn&&!me.ult&&!me.stunBy&&!kinLethal(me)&&!me.lord){me.rc=null;me.crouch=!me.crouch;el.classList.toggle("on",me.crouch)}
+      else if(me.lord&&!me.torn&&performance.now()>=camFlipCd){camFlipUntil=performance.now()+2500;camFlipCd=performance.now()+5000}}
     else{if(k==="tear")tryTear(me,performance.now(),(K.up?1:0)-(K.down?1:0));K[k]=true;el.classList.add("on")}};
   const up=e=>{if(k!=="crouch"){K[k]=false;el.classList.remove("on")}};
   el.addEventListener("pointerdown",dn);
@@ -1160,7 +1163,15 @@ function startMatch(){
 // tập luyện: đấu trường trống, 3 bot đứng yên, hạ xong tự hồi sinh tại chỗ, không có thắng/thua; tuyệt chiêu bật sẵn (có nút tắt để thử xé thường)
 const TRAIN_IDX=[0,5,6,7,8,9];
 let trKin=0; // 0 tắt, 1 bạn là Kinetikeer, 2 một địch là Kinetikeer (đứng yên, xoay theo bạn, bắn mỗi 5s)
+let trMar=0; // 0 tắt, 1 bạn là Marshal, 2 một địch là Marshal (đứng yên)
+function trainMar(m){
+  trMar=m;agents.forEach(a=>{a.lord=false;a.lh=0;a.inv=0});
+  if(m===1){me.lord=true;if(trKin===1){trKin=0;agents.forEach(a=>{a.kin=false;a.kb=null;a.kNext=0})}}else if(m===2)agents[6].lord=true;
+  $("trMar").textContent="⚖️ Marshal: "+["TẮT","BẠN","ĐỊCH"][m];$("trKin").textContent="⚡ Kinetikeer: "+["TẮT","BẠN","ĐỊCH"][trKin];
+  resetTraining();trainUlt(ultOn);
+}
 function trainKin(m){
+  if(m===1&&trMar===1){trMar=0;me.lord=false;me.lh=0;$("trMar").textContent="⚖️ Marshal: TẮT"}
   trKin=m;agents.forEach(a=>{a.kin=false;a.kb=null;a.kNext=0});
   if(m===1)me.kin=true;else if(m===2)agents[7].kin=true;
   agents.forEach(a=>{if(a.kin)a.kNext=performance.now()+KIN_EVERY});
@@ -1169,7 +1180,7 @@ function trainKin(m){
 }
 function trainIn(a){if(a.kin&&!a.isMe&&!a.torn){const st=steer(a,me.x,me.z);return{mv:0,turn:st.turn,jump:false}}return{mv:0,turn:0,jump:false}}
 function trainUlt(on){
-  ultOn=on;me.charge=on?ULT_NEED:0;$("trUlt").textContent=(me.kin?"⚡ Hủy diệt: ":"👊 Tuyệt chiêu: ")+(on?"BẬT":"TẮT");hudUpdate();
+  ultOn=on;me.charge=on?ultNeed(me):0;$("trUlt").textContent=(me.kin?"⚡ Hủy diệt: ":me.lord?"⚖️ Công lý: ":"👊 Tuyệt chiêu: ")+(on?"BẬT":"TẮT");hudUpdate();
 }
 function startTraining(){
   newColors();endAt=0;slowUntil=0;PEND.length=0;
@@ -1180,7 +1191,7 @@ function startTraining(){
     a.kills=0;a.deaths=0;a.charge=0;a.ai=null;a.tearCd=0;a.tearT=-9999;a.tearAt=0;respawn(a,true);a.nick=a.name;
     if(!TRAIN_IDX.includes(i)){a.out=true;a.torn=Infinity;a.g.visible=false}
   });
-  trainKin(0);trainUlt(true);
+  trainMar(0);trainKin(0);trainUlt(true);
   $("hud").style.display="";$("menu").style.display="none";$("over").style.display="none";$("trainUI").style.display="flex";showControls(true);mode="play";
 }
 function resetTraining(){
@@ -1248,8 +1259,8 @@ $("exitNo").onclick=()=>{$("confirm").style.display="none"};
 $("exitYes").onclick=()=>{$("confirm").style.display="none";toMenu()};
 document.addEventListener("pointerdown",()=>{if(AU.ctx&&AU.ctx.state==="suspended")AU.ctx.resume()});
 auApply();
-$("trKin").onclick=()=>trainKin((trKin+1)%3);$("trUlt").onclick=()=>trainUlt(!ultOn);$("trReset").onclick=resetTraining;$("trExit").onclick=toMenu;
-["trUlt","trKin","trReset","trExit"].forEach(i=>$(i).addEventListener("pointerdown",e=>e.stopPropagation()));$("btnFull").onclick=goFull;
+$("trKin").onclick=()=>trainKin((trKin+1)%3);$("trMar").onclick=()=>trainMar((trMar+1)%3);$("trUlt").onclick=()=>trainUlt(!ultOn);$("trReset").onclick=resetTraining;$("trExit").onclick=toMenu;
+["trUlt","trKin","trMar","trReset","trExit"].forEach(i=>$(i).addEventListener("pointerdown",e=>e.stopPropagation()));$("btnFull").onclick=goFull;
 showControls(false);$("hud").style.display="none";
 $("app").addEventListener("pointerdown",()=>{if(mode==="play"&&me.out)spec++});
 
@@ -1257,6 +1268,7 @@ $("app").addEventListener("pointerdown",()=>{if(mode==="play"&&me.out)spec++});
 const ray=new THREE.Raycaster();
 // máy quay điện ảnh khi lướt/đấm: sau lưng sát -> nhìn ngang -> từ trên xuống -> thấp phía bên kia -> chéo trước (đổi mỗi ~0,5s trong 2s đấm)
 const camP=new THREE.Vector3(),camL=new THREE.Vector3();let camBlend=0,shotInit=false;
+let camFlipUntil=0,camFlipCd=0,camF=0; // Marshal bấm Ngồi: camera xoay ra phía trước 2,5s, chờ 5s mới dùng lại
 function ultShot(a,U){
   const t=U.tg,fx=-Math.sin(a.ry),fz=-Math.cos(a.ry),rx=-fz,rz=fx,mx=(a.x+t.x)/2,mz=(a.z+t.z)/2,y=a.y;
   const P=new THREE.Vector3(),L=new THREE.Vector3(mx,y+.9,mz),i=U.st==="dash"?-1:Math.min(3,Math.floor(U.n/4.5));
@@ -1283,7 +1295,7 @@ let prev=performance.now();
 function loop(now){
   requestAnimationFrame(loop);
   const dt=Math.min(.05,(now-prev)/1000);prev=now;
-  if(mode==="play"&&training&&ultOn&&me.charge<ULT_NEED){me.charge=ULT_NEED;hudUpdate()} // tập luyện: tuyệt chiêu luôn sẵn sàng
+  if(mode==="play"&&training&&ultOn&&me.charge<ultNeed(me)){me.charge=ultNeed(me);hudUpdate()} // tập luyện: tuyệt chiêu luôn sẵn sàng
   const dtW=dt*(now<slowUntil?SLOW_K:1);
   if(endAt&&now>=endAt){endAt=0;endMatch(endLt)}
   if(mode==="play")for(const a of agents){if(a.out&&a.hideAt&&now>=a.hideAt){a.g.visible=false;a.hideAt=0}if(!a.out||a.hideAt)step(a,a.isMe?{mv:(K.up?1:0)-(K.down?1:0),turn:(K.left?1:0)-(K.right?1:0),jump:(K.jump?(K.jump=false,true):false)}:training?trainIn(a):botInput(a,dtW,now),dtW,now)}
@@ -1301,7 +1313,8 @@ function loop(now){
     else if(el.style.display!=="none")el.style.display="none";
   }
   const head=new THREE.Vector3(vt.x,vt.y+(vt.prone?.4:vt.crouch?.55:1.3),vt.z);
-  const back=new THREE.Vector3(Math.sin(vt.ry),.5,Math.cos(vt.ry)).normalize();
+  camF+=(((vt===me&&now<camFlipUntil)?1:0)-camF)*Math.min(1,dt*6);
+  const cph=vt.ry+Math.PI*camF,back=new THREE.Vector3(Math.sin(cph),.5,Math.cos(cph)).normalize();
   ray.set(head,back);ray.far=4.6;
   const hit=ray.intersectObjects(walls)[0];
   const d=hit?Math.max(.8,hit.distance-.3):4.6;
