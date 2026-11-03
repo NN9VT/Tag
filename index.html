@@ -8,9 +8,10 @@ html,body{margin:0;height:100%;background:#0b0f14;overflow:hidden;color-scheme:d
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #hud{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));color:#fff;font-size:14px;line-height:1.5;text-shadow:0 1px 3px #000}
 .dot{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid #fff;vertical-align:-1px;margin:0 4px 0 2px}
-#toast{position:absolute;top:4.5%;left:0;right:0;pointer-events:none;color:#fff;font-size:13px;font-weight:600;text-align:center}
-#toast.low{top:11%}
-#toast>div{display:table;margin:2px auto;background:rgba(0,0,0,.5);padding:2px 9px;border-radius:10px}
+#toast{position:absolute;top:calc(52px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));max-width:46%;pointer-events:none;color:#fff;font-size:10.5px;line-height:1.2;font-weight:600;text-align:right;z-index:4}
+#toast.tr{right:auto;top:calc(62px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));text-align:left}
+#toast>div{display:table;margin:1px 0 1px auto;background:rgba(0,0,0,.5);padding:1px 6px;border-radius:9px}
+#toast.tr>div{margin:1px auto 1px 0}
 #flip{position:absolute;top:8px;right:calc(128px + env(safe-area-inset-right,0px));width:44px;height:44px;display:none}
 .pad{position:absolute;bottom:calc(36px + env(safe-area-inset-bottom,0px));display:grid;gap:8px}
 #dpad{left:calc(40px + env(safe-area-inset-left,0px));width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.35);touch-action:none;display:block}
@@ -79,10 +80,10 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="app"><button class="b" id="flip">⟲</button><div id="toast"></div><div id="hud"></div>
 <div id="reach"><span id="reachT"></span><div><i id="reachI"></i></div></div>
 <button id="sndBtn" aria-label="Bật/tắt âm thanh"></button><button id="exitBtn">✕ Thoát</button><div id="confirm"><div class="card"><p>Thoát trận và về menu?</p><button id="exitYes">Thoát</button><button id="exitNo">Tiếp tục</button></div></div>
-<div id="trainUI"><button id="trUlt"></button><button id="trReset">↺ Đặt lại</button><button id="trKin">⚡ Kinetikeer: TẮT</button><button id="trMar">⚖️ Marshal: TẮT</button><button id="trExit">✕ Thoát</button></div>
+<div id="trainUI"><button id="trUlt"></button><button id="trKin">⚡ Kinetikeer: TẮT</button><button id="trMar">⚖️ Marshal: TẮT</button><button id="trReset">↺ Đặt lại</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.50</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.54</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đứng sát tường/thùng cũng không an toàn: đứng ở bên hông rồi bấm Xé để thò tay vào khe, giữ yên khoảng 1s sẽ giật được bảng tên. Bị thò tay thì xoay người lại để chặn</li><li>Hạ 4 đối thủ để mở khóa tuyệt chiêu</li></ol></div></div>
 <div id="setup"><div class="card"><button id="setupX" aria-label="Đóng">✕</button><h2>Cài đặt trận</h2>
 <div class="srow"><span>Số team</span><span class="stp"><button data-s="teams" data-d="-1">−</button><b id="vTeams">2</b><button data-s="teams" data-d="1">+</button></span></div>
@@ -380,7 +381,7 @@ function kinFire(a,now){
     const ally=c.team===a.team;
     PEND.push({t:now+Math.max(0,s)/KIN_BEAM_V*1000,f:()=>{ // tia chạm tới đâu thì người ở đó văng/ngã trước
       if(c.torn||c.out)return;
-      if(lt){if(jusDying(c))jusRelease(c,performance.now(),fx,fz);const k=a.kills,ch=a.charge;killAgent(a,c,performance.now(),false);if(ally){a.kills=k;a.charge=ch}} // bắn trúng đồng đội: không được tính điểm
+      if(lt){if(jusDying(c))jusRelease(c,performance.now(),fx,fz);const k=a.kills,ch=a.charge;kinKill=true;try{killAgent(a,c,performance.now(),false)}finally{kinKill=false}if(ally){a.kills=k;a.charge=ch}} // bắn trúng đồng đội: không được tính điểm
       else if(c.lord){c.kv=[fx*KIN_V*.7,fz*KIN_V*.7];play("fall",c.x,c.z)} // Marshal không ngã, chỉ bị đẩy lùi
       else knockDown(c,performance.now(),fx,fz);
     }});
@@ -427,7 +428,7 @@ function kinVisuals(now){
 }
 let endAt=0,endLt=0,slowUntil=0;const SLOW_K=.4; // endAt: chờ rồi mới hiện bảng điểm; slowUntil: làm chậm cả thế giới
 function respawn(a,first){
-  a.name=genName();
+  if(first||!a.name)a.name=genName(); // tên giữ nguyên suốt ván, chỉ đổi khi vào ván mới
   if(!a.g)a.g=makeChar(TEAMS[a.team][1],a.name);
   else{setBoard(a.g,a.name);Object.assign(a.g.userData,{cr:0,w:0,ph:0,a:0,pr:0,dv:0,pu:0,pp:0});a.g.userData.up.rotation.y=0;a.g.userData.board.visible=true}
   const ti=training?agents.indexOf(a):-1,tp=training&&TP[ti]?TP[ti]:null,p=tp||(first?SP[a.team][a.idx]:randPos(a));
@@ -535,7 +536,7 @@ function killAgent(a,hit,now,viaUlt){
   if(!viaUlt)play("tearHit",hit.x,hit.z);
   if(hit.isMe)play(hit.out?"out":"hurt");
   if(ready&&a.isMe)play("ready");
-  if(ready){FEED.push({until:performance.now()+4000,h:dot(a.team)+a.name+(a.kin?" đã trở thành kẻ hủy diệt! ⚡":a.lord?" đã sẵn sàng Công lý! ⚖️":" đã sẵn sàng 18 cú đấm! 👊")});if(FEED.length>4)FEED.shift();renderFeed()}
+  if(ready){FEED.push({until:performance.now()+4000,h:dot(a.team)+(a.kin?a.name+" đã trở thành kẻ hủy diệt! ⚡":a.lord?a.name+" sẽ chiến đấu vì Công lý! ⚖️":"18 cú đấm của "+a.name+" đã sẵn sàng! 👊")});if(FEED.length>4)FEED.shift();renderFeed()}
   if(hit.out&&!agents.some(t=>t.team===hit.team&&!t.out)){ // cả team bị loại
     const left=[...new Set(agents.filter(t=>!t.out).map(t=>t.team))];
     if(left.length<=1){if(!endAt){endAt=now+(viaUlt?3300:2000);endLt=left.length?left[0]:-1}} // còn 1 team: team đó thắng
@@ -682,16 +683,17 @@ function moveFlying(a,dt){ // người đã bị hạ nhưng đang bị văng đ
 const FEED=[],dot=t=>'<span class="dot" style="background:'+hex(TEAMS[t][1])+'"></span>';
 const alive=t=>agents.filter(a=>a.team===t&&!a.out).length;
 function hudUpdate(){
-  $("hud").innerHTML=(training?"🎯 Tập luyện · Đã hạ <b>"+me.kills+"</b>":[0,1,2,3].filter(t=>t<CFG.teams).map(t=>dot(t)+" ♥<b>"+TS[t]+"</b> · "+alive(t)+" người").join("<br>"))+"<br>"+(me.kin?"⚡ Tia hủy diệt ":me.lord?"⚖️ Công lý ":"👊 Tuyệt chiêu ")+(me.charge>=ultNeed(me)?"<b>SẴN SÀNG</b>":"<b>"+me.charge+"/"+ultNeed(me)+"</b>");
+  $("hud").innerHTML=(training?"🎯 Tập luyện · Đã hạ <b>"+me.kills+"</b>":[0,1,2,3].filter(t=>t<CFG.teams).map(t=>dot(t)+" ♥<b>"+TS[t]+"</b> · "+alive(t)+" người").join("<br>"))+"<br>"+(me.kin?"⚡ Tuyệt chiêu ":me.lord?"⚖️ Tuyệt chiêu ":"👊 Tuyệt chiêu ")+(me.charge>=ultNeed(me)?"<b>SẴN SÀNG</b>":"<b>"+me.charge+"/"+ultNeed(me)+"</b>");
   const tb=document.querySelector('[data-k="tear"]');{const u=!me.kin&&me.charge>=ultNeed(me);tb.classList.toggle("ult",u);tb.textContent=u?(me.lord?"⚖️":"👊"):"🏷️"}
 }
 function renderFeed(){
-  const n=performance.now();while(FEED.length&&FEED[0].until<n)FEED.shift();
+  const n=performance.now();while(FEED.length&&FEED[0].until<n)FEED.shift();while(FEED.length>4)FEED.shift(); // tối đa 4 dòng
   $("toast").innerHTML=FEED.map(f=>"<div>"+f.h+"</div>").join("");
-  $("toast").classList.toggle("low",$("spec").style.display==="block"); // bị loại: chừa chỗ cho dòng "Bạn đã bị loại"
+  $("toast").classList.toggle("tr",!!training); // thông báo nằm góc phải dưới nút loa/thoát; tập luyện thì nằm góc trái dưới bảng đếm (góc phải đã có nút tập luyện)
 }
+let kinKill=false; // đang hạ bằng Tia hủy diệt của Kinetikeer
 function feed(a,b,u){
-  FEED.push({until:performance.now()+4000,h:dot(a.team)+a.name+(u?(a.lord?" vừa dùng Công lý hạ ":" vừa dùng 18 cú đấm hạ "):" vừa hạ ")+dot(b.team)+b.name});
+  FEED.push({until:performance.now()+4000,h:kinKill?dot(a.team)+a.name+" đã xóa sổ "+dot(b.team)+b.name+"! Haha!":u?(a.lord?dot(b.team)+b.name+" vừa bị "+dot(a.team)+a.name+" trừng phạt!":dot(a.team)+a.name+" đã hạ "+dot(b.team)+b.name+" bằng 18 cú đấm!"):dot(a.team)+a.name+" vừa hạ "+dot(b.team)+b.name});
   if(FEED.length>4)FEED.shift();renderFeed();hudUpdate();
 }
 setInterval(renderFeed,500);
@@ -1248,11 +1250,11 @@ function trainKin(m){
 }
 function trainIn(a){if(a.kin&&!a.isMe&&!a.torn){const st=steer(a,me.x,me.z);return{mv:0,turn:st.turn,jump:false}}return{mv:0,turn:0,jump:false}}
 function trainUlt(on){
-  ultOn=on;me.charge=on?ultNeed(me):0;$("trUlt").textContent=(me.kin?"⚡ Hủy diệt: ":me.lord?"⚖️ Công lý: ":"👊 Tuyệt chiêu: ")+(on?"BẬT":"TẮT");hudUpdate();
+  ultOn=on;me.charge=on?ultNeed(me):0;$("trUlt").textContent=(me.kin?"⚡ Hủy diệt: ":me.lord?"⚖️ Công lý: ":"👊 18 cú đấm: ")+(on?"BẬT":"TẮT");hudUpdate();
 }
 function startTraining(){
   newColors();endAt=0;slowUntil=0;PEND.length=0;
-  training=true;setArena(true);$("sndBtn").style.display="block";$("exitBtn").style.display="none";setTimeout(()=>play("whistle"),250);
+  training=true;setArena(true);$("sndBtn").style.display="block";$("exitBtn").style.display="block";setTimeout(()=>play("whistle"),250);
   agents.forEach((a,i)=>{a.on=TRAIN_IDX.includes(i)});assignKin();TS[0]=TS[1]=999;spec=0;$("spec").style.display="none";FEED.length=0;renderFeed();
   K.up=K.down=K.left=K.right=K.jump=false;knob.style.transform="";
   agents.forEach((a,i)=>{
@@ -1323,13 +1325,13 @@ $("btnSnd").onclick=$("sndBtn").onclick=()=>{auInit();AU.on=!AU.on;auApply()};
 $("vol").oninput=()=>{auInit();AU.vol=$("vol").value/100;if(AU.vol>0)AU.on=true;auApply()};
 $("sndBtn").addEventListener("pointerdown",e=>e.stopPropagation());
 $("exitBtn").addEventListener("pointerdown",e=>e.stopPropagation());$("confirm").addEventListener("pointerdown",e=>e.stopPropagation());
-$("exitBtn").onclick=()=>{if(mode==="play")$("confirm").style.display="flex";else if(mode==="over")toMenu()}; // hết ván: Thoát về menu luôn (không cần xác nhận)
+$("exitBtn").onclick=()=>{if(training)toMenu();else if(mode==="play")$("confirm").style.display="flex";else if(mode==="over")toMenu()}; // hết ván: Thoát về menu luôn (không cần xác nhận)
 $("exitNo").onclick=()=>{$("confirm").style.display="none"};
 $("exitYes").onclick=()=>{$("confirm").style.display="none";toMenu()};
 document.addEventListener("pointerdown",()=>{if(AU.ctx&&AU.ctx.state==="suspended")AU.ctx.resume()});
 auApply();
-$("trKin").onclick=()=>trainKin((trKin+1)%3);$("trMar").onclick=()=>trainMar((trMar+1)%3);$("trUlt").onclick=()=>trainUlt(!ultOn);$("trReset").onclick=resetTraining;$("trExit").onclick=toMenu;
-["trUlt","trKin","trMar","trReset","trExit"].forEach(i=>$(i).addEventListener("pointerdown",e=>e.stopPropagation()));$("btnFull").onclick=goFull;
+$("trKin").onclick=()=>trainKin((trKin+1)%3);$("trMar").onclick=()=>trainMar((trMar+1)%3);$("trUlt").onclick=()=>trainUlt(!ultOn);$("trReset").onclick=resetTraining;
+["trUlt","trKin","trMar","trReset"].forEach(i=>$(i).addEventListener("pointerdown",e=>e.stopPropagation()));$("btnFull").onclick=goFull;
 showControls(false);$("hud").style.display="none";
 $("app").addEventListener("pointerdown",()=>{if(mode==="play"&&me.out)spec++});
 
