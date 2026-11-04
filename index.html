@@ -2,6 +2,8 @@
 <html lang="vi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Đuổi Bắt</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGcgZmlsbD0iIzJmYmY0YSIgc3Ryb2tlPSIjMTc2YjJhIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iMjIuMiIgeT0iNDAiIHdpZHRoPSI4LjIiIGhlaWdodD0iMjAiIHJ4PSIxLjUiLz48cmVjdCB4PSIzMy42IiB5PSI0MCIgd2lkdGg9IjguMiIgaGVpZ2h0PSIyMCIgcng9IjEuNSIvPjxyZWN0IHg9IjQ1IiB5PSIyMiIgd2lkdGg9IjYiIGhlaWdodD0iMjAiIHJ4PSIxLjUiLz48cmVjdCB4PSIxMyIgeT0iMjIiIHdpZHRoPSI2IiBoZWlnaHQ9IjIwIiByeD0iMS41Ii8+PHJlY3QgeD0iMTkuNSIgeT0iMjAiIHdpZHRoPSIyNSIgaGVpZ2h0PSIyMiIgcng9IjIiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjEyIiByPSI4LjYiLz48L2c+PHJlY3QgeD0iMjIiIHk9IjI0LjUiIHdpZHRoPSIyMCIgaGVpZ2h0PSIxMSIgcng9IjEiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzE3NmIyYSIgc3Ryb2tlLXdpZHRoPSIxLjIiLz48dGV4dCB4PSIzMiIgeT0iMzMuMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iNzAwIiBmb250LXNpemU9IjkiIGZpbGw9IiMxYTFhMWEiPnRhZzwvdGV4dD48L3N2Zz4K">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
 <style>
 html,body{margin:0;height:100%;background:#0b0f14;overflow:hidden;color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none;touch-action:none}
 #app{position:fixed;top:0;left:0;overflow:hidden;transform-origin:0 0}
@@ -83,8 +85,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trKin">⚡ Kinetikeer: TẮT</button><button id="trMar">⚖️ Marshal: TẮT</button><button id="trReset">↺ Đặt lại</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.57</div></div>
-<div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đứng sát tường/thùng cũng không an toàn: đứng ở bên hông rồi bấm Xé để thò tay vào khe, giữ yên khoảng 1s sẽ giật được bảng tên. Bị thò tay thì xoay người lại để chặn</li><li>Hạ 4 đối thủ để mở khóa tuyệt chiêu</li></ol></div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.59</div></div>
+<div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đứng sát tường/thùng cũng không an toàn: đứng ở bên hông rồi bấm Xé để thò tay vào khe, giữ yên khoảng 0,75s sẽ giật được bảng tên. Bị thò tay thì xoay người lại để chặn</li><li>Hạ 4 đối thủ để mở khóa tuyệt chiêu</li></ol></div></div>
 <div id="setup"><div class="card"><button id="setupX" aria-label="Đóng">✕</button><h2>Cài đặt trận</h2>
 <div class="srow"><span>Số team</span><span class="stp"><button data-s="teams" data-d="-1">−</button><b id="vTeams">2</b><button data-s="teams" data-d="1">+</button></span></div>
 <table id="stbl"></table>
@@ -321,7 +323,7 @@ function randPos(a){
 
 // ---- chế độ đặc biệt: Kinetikeer ----
 let special=false,kinMe=false,lordMe=false;try{special=localStorage.getItem("db_sp")==="1";kinMe=localStorage.getItem("db_km")==="1";lordMe=localStorage.getItem("db_lm")==="1"&&!kinMe}catch(e){}
-const KIN_EVERY=5000,KIN_CHARGE=100,KIN_BEAM_V=120,KIN_H=1.43,KIN_HW=.5,KIN_HIT=.56,KIN_V=20,KIN_LIE=1500,KIN_SPD=.85,KIN_BOT_SPD=.9,KIN_HOV=.5,KIN_RISE=2.2,KIN_RISE_BOT=3.4; // bot Kinetikeer di chuyển/xoay 90% bot thường; kẻ hủy diệt bay lên mặt thùng chậm hơn nhảy (bot nhanh hơn người chơi một chút)
+const KIN_EVERY=4000,KIN_CHARGE=100,KIN_BEAM_V=120,KIN_H=1.43,KIN_HW=.5,KIN_HIT=.56,KIN_V=20,KIN_LIE=1500,KIN_SPD=.85,KIN_BOT_SPD=.9,KIN_HOV=.5,KIN_RISE=2.2,KIN_RISE_BOT=3.4; // bot Kinetikeer di chuyển/xoay 90% bot thường; kẻ hủy diệt bay lên mặt thùng chậm hơn nhảy (bot nhanh hơn người chơi một chút)
 const PEND=[]; // hiệu ứng trúng tia xảy ra trễ theo khoảng cách (gần văng trước)
 const kinLethal=a=>a.kin&&a.charge>=ultNeed(a); // đủ 4 mạng hạ: tia giết người và Kinetikeer bay lơ lửng
 const kinFly=a=>kinLethal(a)&&!a.prone&&!a.torn&&!a.out&&!a.stunBy;
@@ -492,7 +494,7 @@ function tryTear(a,now,mv,bot){
   // đủ 5 charge: nút Xé (người chơi) luôn thành tuyệt chiêu khi đang đứng trên nền. Bot tự quyết định dùng chiêu ở botInput
   if(a.lord&&a.charge>=ultNeed(a)&&a.y<=groundY(a.x,a.z)+.01){startGrab(a,now);return} // Marshal đủ mạng hạ: nút xé thành đòn chộp của Công lý (hụt thì chộp lại được)
   if(!bot&&!a.kin&&a.charge>=ultNeed(a)&&a.y<=groundY(a.x,a.z)+.01){startUlt(a,now);return}
-  // không có ai xé được từ sau lưng mà có người dựa lưng vào vật cản ở bên hông: thò tay vào khe (cần đứng yên SIDE_T)
+  // không có ai xé được từ sau lưng mà có người dựa lưng vào vật cản ở bên hông: thò tay vào khe (cần đứng yên trong thời gian thò tay)
   if(!bot&&a.y<=groundY(a.x,a.z)+.01&&!agents.some(t=>t.team!==a.team&&!t.torn&&!t.out&&!t.supine&&!(a.lord&&t.prone)&&tearReach(a,t))){
     let best=null,bd=9;for(const t of agents)if(reachValid(a,t)){const d=Math.hypot(a.x-t.x,a.z-t.z);if(d<bd){bd=d;best=t}}
     if(best){startReach(a,best,now);return}
@@ -761,14 +763,15 @@ function smoothPath(sx,sz,p){
 // đường thẳng không đụng vật cản (có chừa lề cho thân người)
 function clearSeg(x1,z1,x2,z2){for(const b of boxes)if(segHits(x1,z1,x2,z2,b,.4))return false;return true}
 // dự đoán 0.25s sau (lúc tay xé chạm): tay có với tới bảng tên và đang ở phía sau không
-// ---- đứng sát tường/thùng: lưng bị che nên không xé từ sau được; đứng ở bên hông và thò tay vào khe trong SIDE_T thì giật được bảng tên ----
-const SIDE_T=1000,SIDE_D=1.0,SIDE_COS_MIN=-.4; // thời gian thò tay (ms); khoảng cách tối đa tới mục tiêu; cos tối thiểu giữa hướng lưng và vị trí người xé (hơi quá 90° một chút)
+// ---- đứng sát tường/thùng: lưng bị che nên không xé từ sau được; đứng ở bên hông và thò tay vào khe trong thời gian thò tay thì giật được bảng tên ----
+const SIDE_D=1.0,SIDE_COS_MIN=-.4; // thời gian thò tay (ms); khoảng cách tối đa tới mục tiêu; cos tối thiểu giữa hướng lưng và vị trí người xé (hơi quá 90° một chút)
+const sideT=(a,t)=>a.lord&&t.prone?(a.isMe?750:500):(a.isMe?750:600); // thời gian thò tay (ms): người chơi 0,75s, bot 0,6s; Marshal cúi xuống giật bảng tên người nằm sấp: người chơi 0,75s, bot 0,5s
 const insideObs=(x,z,y)=>boxes.some(b=>y<b.top-.05&&Math.abs(x-b.x)<=b.hw&&Math.abs(z-b.z)<=b.hd);
 const backCovered=t=>insideObs(t.x+Math.sin(t.ry)*.55,t.z+Math.cos(t.ry)*.55,t.y); // lưng cách vật cản dưới ~0,5
 function reachValid(a,t){
   if(!t||t.team===a.team||t.torn||t.out||t.supine||(t.prone&&!a.lord)||t.stunBy||(t.ult&&t.ult.st!=="wind"))return false;
   if(a.prone||a.torn||a.ult||a.stunBy||a.y>groundY(a.x,a.z)+.05||Math.abs(a.y-t.y)>.7)return false;
-  if(t.prone){const bx=t.x-Math.sin(t.ry)*PRONE_BD,bz=t.z-Math.cos(t.ry)*PRONE_BD;return Math.hypot(a.x-bx,a.z-bz)<=1.1} // Marshal cúi xuống giật bảng tên người nằm sấp: đứng gần bảng tên và giữ SIDE_T
+  if(t.prone){const bx=t.x-Math.sin(t.ry)*PRONE_BD,bz=t.z-Math.cos(t.ry)*PRONE_BD;return Math.hypot(a.x-bx,a.z-bz)<=1.1} // Marshal cúi xuống giật bảng tên người nằm sấp: đứng gần bảng tên và giữ trong thời gian thò tay
   if(Math.hypot(t.iv[0],t.iv[1])>=2||!backCovered(t))return false; // mục tiêu phải đứng gần yên và lưng sát vật cản
   const dx=a.x-t.x,dz=a.z-t.z,d=Math.hypot(dx,dz);
   if(d>SIDE_D||d<.01)return false;
@@ -776,8 +779,8 @@ function reachValid(a,t){
   return dot>=SIDE_COS_MIN&&dot<.5;
 }
 function startReach(a,t,now){
-  a.rc={t,t0:now};a.tearT=-9999;a.tearAt=0;a.dvOn=false;
-  t.alertBy=a;t.alertUntil=now+SIDE_T+600;t.alertAt=now+(t.ai?t.ai.react*1000:0); // bot bị thò tay sẽ phản ứng sau thời gian phản xạ
+  a.rc={t,t0:now,dur:sideT(a,t)};a.tearT=-9999;a.tearAt=0;a.dvOn=false;
+  t.alertBy=a;t.alertUntil=now+a.rc.dur+600;t.alertAt=now+(t.ai?t.ai.react*1000:0); // bot bị thò tay sẽ phản ứng sau thời gian phản xạ
   play("reach",a.x,a.z);if(t.isMe)play("warn");
 }
 function reachThreat(a,t,now){ // bot cảnh giác: có địch khác rất gần, hoặc ở gần mà nó đã thấy/nghe/nhớ thì không dám thò tay
@@ -795,7 +798,7 @@ function reachTick(a,now,inp){
   if(!reachValid(a,t)){cancel();return}
   if(!a.isMe){const e=reachThreat(a,t,now);if(e){cancel();if(a.ai)a.ai.look={e,until:now+900};return}}
   a.ry=Math.atan2(-(t.x-a.x),-(t.z-a.z));
-  if(now-R.t0>=SIDE_T){a.rc=null;a.tearCd=now+500;killAgent(a,t,now,false)}
+  if(now-R.t0>=R.dur){a.rc=null;a.tearCd=now+500;killAgent(a,t,now,false)}
 }
 function sideGoal(a,t,px,pz){ // chỗ đứng bên hông, dọc theo tường, bên nào gần bot và không bị vật cản
   const c=Math.cos(t.ry),s=Math.sin(t.ry);let best=null,bd=1e9;
@@ -1273,7 +1276,7 @@ function startMatch(){
 }
 // tập luyện: đấu trường trống, 3 bot đứng yên, hạ xong tự hồi sinh tại chỗ, không có thắng/thua; tuyệt chiêu bật sẵn (có nút tắt để thử xé thường)
 const TRAIN_IDX=[0,5,6,7,8,9];
-let trKin=0; // 0 tắt, 1 bạn là Kinetikeer, 2 một địch là Kinetikeer (đứng yên, xoay theo bạn, bắn mỗi 5s)
+let trKin=0; // 0 tắt, 1 bạn là Kinetikeer, 2 một địch là Kinetikeer (đứng yên, xoay theo bạn, bắn mỗi 4s)
 let trMar=0; // 0 tắt, 1 bạn là Marshal, 2 một địch là Marshal (đứng yên)
 function trainMar(m){
   trMar=m;agents.forEach(a=>{a.lord=false;a.lh=0;a.inv=0});
@@ -1418,8 +1421,8 @@ function loop(now){
   LS.x=vt.x;LS.z=vt.z;LS.ry=vt.ry;
   { // thanh thò tay: người xé thấy tiến trình, người bị thò tay thấy cảnh báo
     let rs=null;
-    if(vt.rc)rs={p:(now-vt.rc.t0)/SIDE_T,w:false};
-    else{const e=agents.find(e=>e.rc&&e.rc.t===vt);if(e)rs={p:(now-e.rc.t0)/SIDE_T,w:true}}
+    if(vt.rc)rs={p:(now-vt.rc.t0)/vt.rc.dur,w:false};
+    else{const e=agents.find(e=>e.rc&&e.rc.t===vt);if(e)rs={p:(now-e.rc.t0)/e.rc.dur,w:true}}
     const el=$("reach");
     if(rs){if(el.style.display!=="block")el.style.display="block";el.className=rs.w?"warn":"";const tx=rs.w?"⚠ Có người đang thò tay vào lưng bạn! Quay lại!":"Đang thò tay…";if($("reachT").textContent!==tx)$("reachT").textContent=tx;$("reachI").style.width=Math.min(100,Math.max(0,rs.p*100))+"%"}
     else if(el.style.display!=="none")el.style.display="none";
