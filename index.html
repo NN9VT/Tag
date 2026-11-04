@@ -83,7 +83,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="trainUI"><button id="trUlt"></button><button id="trKin">⚡ Kinetikeer: TẮT</button><button id="trMar">⚖️ Marshal: TẮT</button><button id="trReset">↺ Đặt lại</button></div>
 <div class="pad" id="dpad"><span style="left:50%;top:15%">▲</span><span style="left:50%;top:85%">▼</span><span style="left:15%;top:50%">◀</span><span style="left:85%;top:50%">▶</span><i id="knob"></i></div>
 <div class="pad" id="acts"><div class="b" data-k="tear">🏷️</div><div class="b" data-k="jump">Nhảy</div><div></div><div class="b" data-k="crouch">Ngồi</div></div>
-<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.56</div></div>
+<div id="menu"><h1>⚔️ Đuổi Bắt</h1><button id="btnBot">Chơi với máy</button><button id="btnTrain">Tập luyện</button><button id="btnMulti" disabled>Nhiều người chơi<small>Sắp có</small></button><button id="btnRules">Cách chơi</button><div class="mrow"><button id="btnFull">⛶ Toàn màn hình</button><button id="btnSnd"></button><input id="vol" type="range" min="0" max="100" aria-label="Âm lượng"></div><div id="ver">ver1.57</div></div>
 <div id="rules"><div class="card"><button id="rulesX" aria-label="Đóng">✕</button><h2>Cách chơi</h2><ol><li>Xé bảng tên team đối thủ để chiến thắng</li><li>Chỉ xé được sau lưng!</li><li>Mỗi team có số lượng hồi sinh nhất định</li><li>Ngồi sẽ không thể bị xé trong vài trường hợp</li><li>Bấm Xé trong lúc nhảy để lao người nhanh</li><li>Cẩn thận té ngã!</li><li>Đứng sát tường/thùng cũng không an toàn: đứng ở bên hông rồi bấm Xé để thò tay vào khe, giữ yên khoảng 1s sẽ giật được bảng tên. Bị thò tay thì xoay người lại để chặn</li><li>Hạ 4 đối thủ để mở khóa tuyệt chiêu</li></ol></div></div>
 <div id="setup"><div class="card"><button id="setupX" aria-label="Đóng">✕</button><h2>Cài đặt trận</h2>
 <div class="srow"><span>Số team</span><span class="stp"><button data-s="teams" data-d="-1">−</button><b id="vTeams">2</b><button data-s="teams" data-d="1">+</button></span></div>
@@ -515,7 +515,8 @@ function resolveTear(a,now){
     const h=Math.hypot(hx-V1.x,hz-V1.z),dy=V1.y-hy
     const dx=a.x-t.x,dz=a.z-t.z,dist=Math.hypot(dx,dz)||.001;
     const behind=t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/dist>=.5;
-    if(behind&&h<=.75+(a.dive?.2:0)+(a.lord?.3:0)+(t.lord?.25:0)&&dy>=(a.lord?-1.4:-.4)&&dy<=.47+(t.lord?.3:0)){hit=t;break} // Marshal xé: phạm vi rộng hơn, người ngồi vẫn dính; Marshal bị xé: bảng tên to nên dễ trúng
+    const kr=kpbR(a,t,a.crouch),ky=kpbY(a,t,a.crouch);
+    if(behind&&h<=.75+(a.dive?.2:0)+(a.lord?.3:0)+(t.lord?.25:0)+kr&&dy>=(a.lord?-1.4:-.4)-ky&&dy<=.47+(t.lord?.3:0)+ky){hit=t;break} // Marshal xé: phạm vi rộng hơn, người ngồi vẫn dính; Marshal bị xé: bảng tên to nên dễ trúng
   }
   if(hit){killAgent(a,hit,now,false);return true}
   return false;
@@ -523,7 +524,7 @@ function resolveTear(a,now){
 // hạ một người: mất 1 mạng chung của team (hết mạng thì bị loại), cộng điểm, tính charge tuyệt chiêu
 function killAgent(a,hit,now,viaUlt){
   const hNeed=ultNeed(hit),wasMarshal=!!hit.lord;
-  if(hit.lord&&!viaUlt&&!hit.lh){hit.lh=1;hit.charge=0;hit.inv=now+LORD_INV;lordBurst(hit,now);return} // Marshal chịu được lần xé đầu: không mất mạng team, bất tử ngắn, nhưng mất các mạng hạ đã tích
+  if(hit.lord&&!viaUlt&&!hit.lh){hit.lh=1;hit.inv=now+LORD_INV;lordBurst(hit,now);return} // Marshal chịu được lần xé đầu: không mất mạng team, bất tử ngắn, các mạng hạ đã tích vẫn giữ nguyên (chỉ mất khi bị xé lần hai)
   if(hit.lord)hit.lord=false; // chết rồi thì hồi sinh thành nhân vật thường
   hit.tum=null;a.kills++;hit.deaths++;hit.tearAt=0;hit.dvOn=false;hit.ult=null;hit.rc=null;hit.g.userData.board.visible=false;
   if(hit.charge>=hNeed||wasMarshal)hit.charge=0; // Marshal chết thì các mạng hạ đã tích không chuyển sang mạng sau (nhân vật thường)
@@ -807,6 +808,9 @@ function sideGoal(a,t,px,pz){ // chỗ đứng bên hông, dọc theo tường, 
 }
 // người nằm sấp: bảng tên nằm ở lưng, cách tâm khoảng .85 về phía ĐẦU (hướng mặt); người xé đang ngồi thì tay với ra trước khoảng .85 (vai chúi về trước)
 const PRONE_BD=.85;
+const KPB_R=[.3,.5],KPB_Y=[.2,.35]; // Kinetikeer ngồi xé người nằm sấp: cộng thêm tầm với (ngang) và biên độ cao; [người chơi, bot]. Người đang đứng không được cộng
+const kpbI=(a,t,cr)=>a.kin&&t.prone&&!t.supine&&(cr||!a.isMe)?(a.isMe?0:1):-1; // bot luôn ngồi trước khi xé nên không cần xét ngồi
+const kpbR=(a,t,cr)=>{const i=kpbI(a,t,cr);return i<0?0:KPB_R[i]},kpbY=(a,t,cr)=>{const i=kpbI(a,t,cr);return i<0?0:KPB_Y[i]};
 function proneGoal(a,t,px,pz){ // chỗ bot cần đứng: cách bảng tên .85 phía bot đang ở, để tay chạm đúng bảng tên
   const bx=px-Math.sin(t.ry)*PRONE_BD,bz=pz-Math.cos(t.ry)*PRONE_BD;
   let ux=a.x-bx,uz=a.z-bz;const m=Math.hypot(ux,uz);
@@ -818,7 +822,7 @@ function tearReach(a,t){
   const lead=t.prone?PRONE_BD:.5,hx=ax-Math.sin(a.ry)*lead,hz=az-Math.cos(a.ry)*lead,
     bx=t.prone?tx-Math.sin(t.ry)*PRONE_BD:tx+Math.sin(t.ry)*.133,bz=t.prone?tz-Math.cos(t.ry)*PRONE_BD:tz+Math.cos(t.ry)*.133;
   const dx=ax-tx,dz=az-tz,d=Math.hypot(dx,dz)||.001;
-  return(t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.55)&&Math.hypot(hx-bx,hz-bz)<=(t.prone?.65:.9+(a.lord?.3:0)+(t.lord?.25:0)); // Marshal xé tầm rộng hơn (+.3), bảng tên Marshal bị xé dễ trúng hơn (+.25)
+  return(t.prone||(dx*Math.sin(t.ry)+dz*Math.cos(t.ry))/d>=.55)&&Math.hypot(hx-bx,hz-bz)<=(t.prone?.65+kpbR(a,t,a.crouch):.9+(a.lord?.3:0)+(t.lord?.25:0)); // Marshal xé tầm rộng hơn (+.3), bảng tên Marshal bị xé dễ trúng hơn (+.25)
 }
 function segHits(x1,z1,x2,z2,b,m=0){
   let t0=0,t1=1;const dx=x2-x1,dz=z2-z1;
@@ -843,7 +847,7 @@ function canHear(a,t){
   return Math.hypot(t.x-a.x,t.z-a.z)<(t.crouch?1.5:5);
 }
 const boardY=t=>t.y+(t.prone?.2:t.crouch?.391:.854);
-const fitOk=(a,t,c)=>{const dy=boardY(t)-(a.y+(c?.364:.994));return dy>=(a.lord?-1.4:-.4)&&dy<=.47+(t.lord?.3:0)}; // Marshal với được cả người đang ngồi mà không cần ngồi
+const fitOk=(a,t,c)=>{const dy=boardY(t)-(a.y+(c?.364:.994)),kb=c?kpbY(a,t,true):0;return dy>=(a.lord?-1.4:-.4)-kb&&dy<=.47+(t.lord?.3:0)+kb}; // Marshal với được cả người đang ngồi mà không cần ngồi
 function patrolGoal(a,A){
   const bx=[0,0,1,-1][a.team],bz=[1,-1,0,0][a.team],cl=v=>Math.max(-23,Math.min(23,v));
   for(let i=0;i<30;i++){
@@ -998,6 +1002,18 @@ function botInput(a,dt,now){
   if(a.alertBy&&now>=a.alertAt){const e=a.alertBy;A.mem.set(e,{x:e.x,z:e.z,until:now+4000});const st=steer(a,e.x,e.z);a.crouch=false;a.boost=1;return{mv:0,turn:st.turn,jump:false}} // bị thò tay vào lưng: quay lại đối đầu
   if(A.look&&now<A.look.until){const e=A.look.e;A.mem.set(e,{x:e.x,z:e.z,until:now+4000});const st=steer(a,e.x,e.z);a.boost=1;return{mv:0,turn:st.turn,jump:false}} // vừa phát hiện địch khác lúc thò tay: quay ra nhìn
   if(now>A.next){A.next=now+A.react*1000;think(a,A,now)}
+  if(A.bj){ // bot Marshal đang nhảy lùi vượt đầu địch: giữ hướng, lùi hết đà, gần đáp đất thì xé
+    const B=A.bj,g0=groundY(a.x,a.z);
+    if(B.t.torn||B.t.out||now>B.t0+1500||(a.y<=g0+.01&&now>B.t0+200))A.bj=null;
+    else{
+      a.crouch=false;a.boost=1;
+      if(!B.done&&a.y>g0+.05&&a.vy<0&&now>=a.tearCd&&tearReach(a,B.t)){ // đang rơi: dự đoán 0,25s sau (lúc tay chạm) bảng tên đã trong tầm với cả ngang lẫn dọc thì bấm xé
+        const yp=a.y+a.vy*.25-1.25,dy=boardY(B.t)-(yp+.994);
+        if(dy>=-1.4&&dy<=.47){B.done=true;tryTear(a,now,0,true)}
+      }
+      return{mv:-1,turn:0,jump:now<B.t0+60};
+    }
+  }
   const inp={mv:0,turn:0,jump:false};
   // đủ 5 charge: có địch phía trước trong tầm thì tung 18 cú đấm
   if(!a.kin&&a.charge>=ultNeed(a)&&!a.prone&&now>=a.tearCd&&a.y<=groundY(a.x,a.z)+.01){
@@ -1011,6 +1027,24 @@ function botInput(a,dt,now){
     else{const ut=ultTarget(a);if(ut&&Math.hypot(ut.x-a.x,ut.z-a.z)<4.5){startUlt(a,now);return inp}}
   }
   if(a.kin){const kr=kinBot(a,A,now);if(kr)return kr}
+  // bot Marshal nhảy cao: địch đuổi sát sau lưng (đang nhìn về phía bot) thì nhảy lùi vượt qua đầu địch, tới gần lúc đáp đất bấm xé bảng tên địch
+  if(a.lord&&!a.crouch&&!a.prone&&a.y<=groundY(a.x,a.z)+.01&&now>=a.tearCd&&now>=(A.bjCd||0)){
+    const fx=-Math.sin(a.ry),fz=-Math.cos(a.ry);
+    for(const t of agents){
+      if(t.team===a.team||t.torn||t.out||t.supine||t.prone||t.stunBy||t.inv>now||(t.ult&&t.ult.st!=="wind")||Math.abs(t.y-a.y)>.5)continue;
+      const dx=t.x-a.x,dz=t.z-a.z,d=Math.hypot(dx,dz);
+      if(d<.8||d>2.6||(dx*fx+dz*fz)/d>-.5||(-dx*-Math.sin(t.ry)+-dz*-Math.cos(t.ry))/d<.5)continue; // địch ở sau lưng và đang quay mặt về phía bot
+      if(!(A.mem.has(t)||canHear(a,t)))continue;
+      // lùi trên không ~2,8/s; phải bay qua đầu địch lúc đang cao hơn 1,2 (thấp hơn thì đụng người): chưa chạm địch trước 0,17s và đã vượt qua trước 0,71s
+      const cl=2.8+Math.max(0,t.iv[0]*-dx/d+t.iv[1]*-dz/d);
+      if(d-cl*.17<.6||cl*.71<d+.5)continue;
+      const lx=a.x+Math.sin(a.ry)*3,lz=a.z+Math.cos(a.ry)*3;
+      if(Math.abs(lx)>24||Math.abs(lz)>24||!free(lx,lz)||!clearSeg(a.x,a.z,lx,lz))continue;
+      A.bjCd=now+3500;
+      if(Math.random()<.85){A.bj={t,t0:now,done:false};A.tg=t;a.boost=1;return{mv:-1,turn:0,jump:true}}
+      break;
+    }
+  }
   // đấu tay đôi bế tắc (hai bên xoay vòng quanh nhau): sau ~1,5s ở sát nhau mà không ai ra sau lưng được thì tung đồng xu, 50% lùi ra ~1s rồi tiếp cận lại
   if(A.retreat){
     if(now<A.retreat.until&&!a.prone){const st=steer(a,A.retreat.x,A.retreat.z);a.crouch=false;a.boost=1;inp.turn=st.turn;inp.mv=st.mv;return inp}
